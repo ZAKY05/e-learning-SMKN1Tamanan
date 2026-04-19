@@ -1,0 +1,13 @@
+No	Migration	Tabel	Fungsi
+1	2025_01_15_000001	pengajaran	Relasi guru-kelas-mapel
+2	2025_01_15_000002	materi	Upload & daftar materi
+3	2025_01_15_000003	tugas	Buat tugas
+4	2025_01_15_000004	tugas_kumpul	Pengumpulan tugas siswa
+5	2025_01_15_000005	bank_soal	Bank soal
+6	2025_01_15_000006	ujian	Buat ujian
+7	2025_01_15_000007	ujian_soal	Pivot soal ke ujian
+8	2025_01_15_000008	ujian_hasil	Hasil ujian siswa
+9	2025_01_15_000009	ujian_jawaban	Jawaban per soal
+10	2025_01_15_000010	absensi	Input absensi
+11	2025_01_15_000011	nilai	Nilai (polymorphic)
+12	2025_01_15_000012	rapor	Cetak rapor
