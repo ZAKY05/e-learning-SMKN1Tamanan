@@ -62,8 +62,8 @@
                      </ul>
                  </li>
                  <li class="nxl-item">
-                     <a href="{{ route('admin.dashboard') }}" class="nxl-link">
-                         <span class="nxl-micon"><i class="feather-home"></i></span>
+                     <a href="{{ route('admin.bank-lokasi.index') }}" class="nxl-link">
+                         <span class="nxl-micon"><i class="fa-solid fa-map-location-dot"></i></span>
                          <span class="nxl-mtext">Bank Lokasi</span>
                      </a>
                  </li>
