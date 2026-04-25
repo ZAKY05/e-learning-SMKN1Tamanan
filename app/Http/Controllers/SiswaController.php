@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Student;
+use App\Models\Pelajar;
 use App\Models\Jurusan;
 use App\Models\Kelas;
 use App\Models\User;
@@ -12,18 +12,18 @@ class SiswaController extends Controller
 {
     public function index()
     {
-        $students = Student::with('jurusan', 'kelas.jurusan')->get();
+        $pelajar = Pelajar::with('jurusan', 'kelas.jurusan')->get();
         $jurusans = Jurusan::all();
         $kelas = Kelas::with('jurusan')->orderBy('tingkat')->orderBy('golongan')->get();
         // Fetch siswa accounts that aren't linked yet
         $akuns_siswa = User::where('role', 'siswa')->whereNull('siswa_id')->get();
-        return view('Admin.pages.data.data-siswa', compact('students', 'jurusans', 'kelas', 'akuns_siswa'));
+        return view('Admin.pages.data.data-siswa', compact('pelajar', 'jurusans', 'kelas', 'akuns_siswa'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nis' => 'required|string|max:15|unique:student,nis',
+            'nis' => 'required|string|max:15|unique:Pelajar,nis',
             'nama' => 'required|string|max:30',
             'jurusan_id' => 'nullable|exists:jurusan,id_jurusan',
             'kelas_id' => 'nullable|exists:kelas,id_kelas',
@@ -39,7 +39,7 @@ class SiswaController extends Controller
             $data['foto_profil'] = 'uploads/siswa/' . $filename;
         }
 
-        $student = Student::create($data);
+        $student = Pelajar::create($data);
 
         // Link the chosen user account
         $user = User::where('role', 'siswa')->where('nis', $request->nis)->first();
@@ -53,10 +53,10 @@ class SiswaController extends Controller
 
     public function update(Request $request, $id)
     {
-        $student = Student::findOrFail($id);
+        $student = Pelajar::findOrFail($id);
 
         $request->validate([
-            'nis' => 'required|string|max:15|unique:student,nis,' . $id . ',id_siswa',
+            'nis' => 'required|string|max:15|unique:Pelajar,nis,' . $id . ',id_siswa',
             'nama' => 'required|string|max:30',
             'jurusan_id' => 'nullable|exists:jurusan,id_jurusan',
             'kelas_id' => 'nullable|exists:kelas,id_kelas',
@@ -82,7 +82,7 @@ class SiswaController extends Controller
 
     public function destroy($id)
     {
-        $student = Student::findOrFail($id);
+        $student = Pelajar::findOrFail($id);
 
         if ($student->foto_profil && file_exists(public_path($student->foto_profil))) {
             unlink(public_path($student->foto_profil));

@@ -51,15 +51,5 @@ class Guru extends Model
         return $this->hasOne(User::class, 'guru_id', 'id_guru');
     }
 
-    // Relasi ke pengajaran
-    public function pengajaran()
-    {
-        return $this->hasMany(Pengajaran::class, 'guru_id', 'id_guru');
-    }
-
-    // Relasi ke nilai (input_by)
-    public function nilaiInput()
-    {
-        return $this->hasMany(Nilai::class, 'input_by', 'id_guru');
-    }
+   
 }

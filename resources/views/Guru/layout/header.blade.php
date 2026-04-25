@@ -46,7 +46,7 @@
         <!--! [Start] Header Right !-->
         <div class="header-right ms-auto">
             <div class="d-flex align-items-center">
-                
+
 
                 <div class="nxl-h-item d-none d-sm-flex">
                     <div class="full-screen-switcher">
@@ -65,7 +65,7 @@
                         <i class="feather-sun"></i>
                     </a>
                 </div>
-                
+
                 <div class="dropdown nxl-h-item">
                     <a class="nxl-head-link me-3" data-bs-toggle="dropdown" href="#" role="button"
                         data-bs-auto-close="outside">
@@ -152,17 +152,27 @@
                 <div class="dropdown nxl-h-item">
                     <a href="javascript:void(0);" data-bs-toggle="dropdown" role="button"
                         data-bs-auto-close="outside">
-                        <img src="assets/images/avatar/1.png" alt="user-image" class="img-fluid user-avtar me-0" />
+                        @php
+                            $fotoPath = auth()->user()->guru->foto_profil ?? (auth()->user()->foto_profil ?? null);
+                            $avatarUrl =
+                                $fotoPath && file_exists(public_path($fotoPath))
+                                    ? asset($fotoPath)
+                                    : asset('assets/images/avatar/1.png');
+                        @endphp
+
+                        <img src="{{ $avatarUrl }}" alt="user-image" class="img-fluid user-avtar me-0"
+                            style="object-fit: cover; aspect-ratio: 1/1;" />
                     </a>
                     <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown">
                         <div class="dropdown-header">
                             <div class="d-flex align-items-center">
-                                <img src="assets/images/avatar/1.png" alt="user-image"
+                                <img src="{{ $avatarUrl }}"
                                     class="img-fluid user-avtar" />
                                 <div>
-                                    <h6 class="text-dark mb-0">Alexandra Della <span
-                                            class="badge bg-soft-success text-success ms-1">PRO</span></h6>
-                                    <span class="fs-12 fw-medium text-muted">alex@example.com</span>
+                                    <h6 class="text-dark mb-0">{{ auth()->user()->name }} <span
+                                            class="badge bg-soft-success text-success ms-1">{{ auth()->user()->role }}</span>
+                                    </h6>
+                                    <span class="fs-12 fw-medium text-muted">{{ auth()->user()->email }}</span>
                                 </div>
                             </div>
                         </div>
@@ -171,7 +181,7 @@
                             <i class="feather-user"></i>
                             <span>Profile</span>
                         </a>
-                       
+
                         <div class="dropdown-divider"></div>
                         <a href="javascript:void(0);" class="dropdown-item"
                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

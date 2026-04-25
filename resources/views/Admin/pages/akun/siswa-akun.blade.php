@@ -56,7 +56,8 @@
 
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0" id="tabelAkunSiswa" style="font-size:0.9rem;">
+                            <table class="table table-hover align-middle mb-0" id="tabelAkunSiswa"
+                                style="font-size:0.9rem;">
                                 <thead class="table-light">
                                     <tr>
                                         <th width="50">#</th>
@@ -75,9 +76,9 @@
                                                 <div class="d-flex align-items-center gap-2">
                                                     <div class="avatar-text avatar-sm rounded-circle bg-soft-primary text-primary fw-bold"
                                                         style="font-size:0.9rem; width:36px; height:36px; line-height:36px; text-align:center;">
-                                                        {{ strtoupper(substr($data->name, 0, 1)) }}
+                                                        {{ strtoupper(substr($data->nama, 0, 1)) }}
                                                     </div>
-                                                    <span class="fw-semibold">{{ $data->name }}</span>
+                                                    <span class="fw-semibold">{{ $data->nama }}</span>
                                                 </div>
                                             </td>
                                             <td>{{ $data->nis }}</td>
@@ -88,7 +89,7 @@
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-soft-warning btn-edit-akun"
                                                     data-bs-toggle="modal" data-bs-target="#modalEditAkun"
-                                                    data-id="{{ $data->id }}" data-name="{{ $data->name }}"
+                                                    data-id="{{ $data->id }}" data-name="{{ $data->nama }}"
                                                     data-nis="{{ $data->nis }}" data-email="{{ $data->email }}"
                                                     title="Edit Akun"
                                                     style="font-size:0.88rem; padding:0.3rem 0.6rem; margin-bottom:2px;">
@@ -97,7 +98,7 @@
 
                                                 <button type="button" class="btn btn-soft-danger btn-hapus-akun"
                                                     data-bs-toggle="modal" data-bs-target="#modalHapusAkun"
-                                                    data-id="{{ $data->id }}" data-name="{{ $data->name }}"
+                                                    data-id="{{ $data->id }}" data-name="{{ $data->nama }}"
                                                     title="Hapus"
                                                     style="font-size:0.88rem; padding:0.3rem 0.6rem; margin-bottom:2px;">
                                                     <i class="feather-trash-2" style="font-size:0.95rem;"></i>
@@ -135,14 +136,16 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">NIS <span class="text-danger">*</span></label>
-                            <input type="text" name="nis" class="form-control" placeholder="Masukkan NIS siswa"
-                                maxlength="15" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Nama Siswa <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control" placeholder="Masukkan nama siswa"
-                                maxlength="255" required>
+                            <label class="form-label fw-semibold">Pilih Siswa <span class="text-danger">*</span></label>
+                            <select name="siswa_id" class="form-select" required>
+                                <option value="" selected>-- Pilih Siswa --</option>
+                                @foreach ($siswaTanpaAkun as $siswa)
+                                    <option value="{{ $siswa->id_siswa }}">
+                                        {{ $siswa->nis }} — {{ $siswa->nama }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Hanya menampilkan siswa yang belum memiliki akun</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
@@ -190,11 +193,13 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">NIS <span class="text-danger">*</span></label>
-                            <input type="text" name="nis" id="editNisSiswa" class="form-control" maxlength="15" required>
+                            <input type="text" name="nis" id="editNisSiswa" class="form-control" maxlength="15"
+                                required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nama Siswa <span class="text-danger">*</span></label>
-                            <input type="text" name="name" id="editNamaSiswa" class="form-control" maxlength="255" required>
+                            <input type="text" name="name" id="editNamaSiswa" class="form-control"
+                                maxlength="255" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>

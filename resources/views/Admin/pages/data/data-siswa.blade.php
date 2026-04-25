@@ -69,7 +69,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="bodyTabelSiswa">
-                                    @foreach ($students as $data)
+                                    @foreach ($pelajar as $data)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
@@ -153,19 +153,14 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">NIS (Dari Akun Siswa) <span class="text-danger">*</span></label>
-                            <select name="nis" id="selectNisSiswa" class="form-select" required>
-                                <option value="" selected>-- Pilih NIS Akun --</option>
-                                @foreach($akuns_siswa as $akun)
-                                    <option value="{{ $akun->nis }}" data-name="{{ $akun->name }}">{{ $akun->nis }} - {{ $akun->name }}</option>
-                                @endforeach
-                            </select>
-                            <small class="text-muted">Pilih NIS dari akun yang telah didaftarkan</small>
+                            <label class="form-label fw-semibold">NIS <span class="text-danger">*</span></label>
+                            <input type="text" name="nis" class="form-control" placeholder="Masukkan NIS"
+                                maxlength="15" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nama Siswa <span class="text-danger">*</span></label>
-                            <input type="text" name="nama" id="inputNamaSiswaTambah" class="form-control bg-light" placeholder="Pilih NIS agar nama terisi otomatis"
-                                maxlength="30" required readonly>
+                            <input type="text" name="nama" class="form-control" placeholder="Masukkan nama siswa"
+                                maxlength="30" required>
                         </div>
                         <div class="row">
                             <div class="col-6 mb-3">
@@ -222,13 +217,13 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">NIS <span class="text-danger">*</span></label>
-                            <input type="text" name="nis" id="editNis" class="form-control bg-light" maxlength="15"
-                                required readonly>
+                            <input type="text" name="nis" id="editNis" class="form-control" maxlength="15"
+                                required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nama Siswa <span class="text-danger">*</span></label>
-                            <input type="text" name="nama" id="editNama" class="form-control bg-light" maxlength="30"
-                                required readonly>
+                            <input type="text" name="nama" id="editNama" class="form-control" maxlength="30"
+                                required>
                         </div>
                         <div class="row">
                             <div class="col-6 mb-3">
@@ -345,18 +340,6 @@
                 noMsg.classList.remove('d-none');
             } else {
                 noMsg.classList.add('d-none');
-            }
-        });
-
-        // Auto-fill Name when NIS is selected in Tambah Modal
-        document.getElementById('selectNisSiswa').addEventListener('change', function() {
-            var selectedOption = this.options[this.selectedIndex];
-            var nameField = document.getElementById('inputNamaSiswaTambah');
-            
-            if (this.value) {
-                nameField.value = selectedOption.getAttribute('data-name');
-            } else {
-                nameField.value = '';
             }
         });
     </script>

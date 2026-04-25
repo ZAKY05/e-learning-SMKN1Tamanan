@@ -8,6 +8,7 @@ use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\AkunGuruController;
 use App\Http\Controllers\MapelController;
+use App\Http\Controllers\BanklokasiController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -76,6 +77,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
         Route::post('/akun-siswa', [\App\Http\Controllers\AkunSiswaController::class , 'store'])->name('akun-siswa.store');
         Route::put('/akun-siswa/{id}', [\App\Http\Controllers\AkunSiswaController::class , 'update'])->name('akun-siswa.update');
         Route::delete('/akun-siswa/{id}', [\App\Http\Controllers\AkunSiswaController::class , 'destroy'])->name('akun-siswa.destroy');
+
+        //Bank lokasi
+        Route::get('/bank-lokasi', [\App\Http\Controllers\BankLokasiController::class , 'index'])->name('bank-lokasi.index');
+        Route::post('/bank-lokasi', [\App\Http\Controllers\BankLokasiController::class , 'store'])->name('bank-lokasi.store');
+        Route::put('/bank-lokasi/{id}', [\App\Http\Controllers\BankLokasiController::class , 'update'])->name('bank-lokasi.update');
+        Route::delete('/bank-lokasi/{id}', [\App\Http\Controllers\BankLokasiController::class , 'destroy'])->name('bank-lokasi.destroy');
+
     });
 
 // ============ Guru Routes ============
