@@ -13,44 +13,33 @@ class Materi extends Model
     protected $primaryKey = 'id_materi';
 
     protected $fillable = [
-        'pengajaran_id',
-        'judul',
+        'guru_id',
+        'kelas_id',
+        'mapel_id',
+        'judul_materi',
         'deskripsi',
         'file_path',
-        'tipe_file',
-        'urutan',
-        'is_published',
+        'file_name',
+        'file_type',
+        'file_size',
+        'semester',
+        'minggu_ke',
+        'tanggal_upload',
+        'status',
     ];
 
-    protected $casts = [
-        'is_published' => 'boolean',
-        'urutan' => 'integer',
-    ];
-
-    /**
-     * Relasi ke pengajaran
-     */
-    public function pengajaran()
+    public function guru()
     {
-        return $this->belongsTo(Pengajaran::class, 'pengajaran_id', 'id_pengajaran');
+        return $this->belongsTo(Guru::class, 'guru_id', 'id_guru');
     }
 
-    /**
-     * Aksesoris: URL file lengkap
-     */
-    public function getFileUrlAttribute()
+    public function kelas()
     {
-        if ($this->file_path && $this->tipe_file !== 'link') {
-            return asset('storage/' . $this->file_path);
-        }
-        return $this->file_path;
+        return $this->belongsTo(Kelas::class, 'kelas_id', 'id_kelas');
     }
 
-    /**
-     * Scope: hanya materi yang dipublish
-     */
-    public function scopePublished($query)
+    public function mapel()
     {
-        return $query->where('is_published', true);
+        return $this->belongsTo(Mapel::class, 'mapel_id', 'id_mapel');
     }
 }

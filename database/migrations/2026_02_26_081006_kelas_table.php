@@ -11,7 +11,7 @@ return new class extends Migration
 {
     Schema::create('kelas', function (Blueprint $table) {
 
-        $table->increments('id_kelas');
+        $table->id('id_kelas');
 
         $table->tinyInteger('tingkat'); 
         $table->unsignedInteger('jurusan_id');

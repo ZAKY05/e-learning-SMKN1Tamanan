@@ -21,9 +21,12 @@ class KelasController extends Controller
             'tingkat' => 'required|integer|min:1|max:13',
             'jurusan_id' => 'required|exists:jurusan,id_jurusan',
             'golongan' => 'required|integer|min:1',
+            'is_pkl' => 'nullable|boolean',
         ]);
 
-        Kelas::create($request->only('tingkat', 'jurusan_id', 'golongan'));
+        $data = $request->only('tingkat', 'jurusan_id', 'golongan');
+        $data['is_pkl'] = $request->has('is_pkl') ? 1 : 0;
+        Kelas::create($data);
 
         return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil ditambahkan.');
     }
@@ -34,10 +37,13 @@ class KelasController extends Controller
             'tingkat' => 'required|integer|min:1|max:13',
             'jurusan_id' => 'required|exists:jurusan,id_jurusan',
             'golongan' => 'required|integer|min:1',
+            'is_pkl' => 'nullable|boolean',
         ]);
 
         $kelas = Kelas::findOrFail($id);
-        $kelas->update($request->only('tingkat', 'jurusan_id', 'golongan'));
+        $data = $request->only('tingkat', 'jurusan_id', 'golongan');
+        $data['is_pkl'] = $request->has('is_pkl') ? 1 : 0;
+        $kelas->update($data);
 
         return redirect()->route('admin.kelas.index')->with('success', 'Kelas berhasil diperbarui.');
     }

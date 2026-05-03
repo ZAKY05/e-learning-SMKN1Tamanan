@@ -11,6 +11,11 @@ class BanklokasiController extends Controller
         $banklokasis = \App\Models\Banklokasi::orderBy('nama_lokasi')->get();
         return view('Admin.pages.bank_lokasi', compact('banklokasis'));
     }
+    public function index_guru()
+    {
+        $banklokasis = \App\Models\Banklokasi::orderBy('nama_lokasi')->get();
+        return view('Guru.pages.bank-lokasi', compact('banklokasis'));
+    }
 
     public function store(Request $request)
     {

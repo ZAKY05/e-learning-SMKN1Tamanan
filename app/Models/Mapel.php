@@ -16,9 +16,20 @@ class Mapel extends Model
 
     protected $fillable = [
         'nama_mapel',
+        'kode_mapel',
         'jenis',
+        'kategori',
         'jurusan_id',
+        'jam_per_minggu',
     ];
+
+    /**
+     * Cek apakah mapel produktif (DDKV) yang diatur kaprog
+     */
+    public function isProduktif(): bool
+    {
+        return $this->kategori === 'produktif';
+    }
 
     public function mapel(): BelongsToMany
     {

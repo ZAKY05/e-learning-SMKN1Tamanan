@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pelajar;
+use App\Models\Student as Pelajar;
 use App\Models\Jurusan;
 use App\Models\Kelas;
 use App\Models\User;

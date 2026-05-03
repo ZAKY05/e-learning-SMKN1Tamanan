@@ -9,6 +9,8 @@ use App\Http\Controllers\GuruController;
 use App\Http\Controllers\AkunGuruController;
 use App\Http\Controllers\MapelController;
 use App\Http\Controllers\BanklokasiController;
+use App\Http\Controllers\JadwalController;
+use App\Http\Controllers\MateriController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -84,14 +86,46 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
         Route::put('/bank-lokasi/{id}', [\App\Http\Controllers\BankLokasiController::class , 'update'])->name('bank-lokasi.update');
         Route::delete('/bank-lokasi/{id}', [\App\Http\Controllers\BankLokasiController::class , 'destroy'])->name('bank-lokasi.destroy');
 
+        // Jadwal Mengajar
+        Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
+        Route::get('/jadwal/setting', [JadwalController::class, 'settingForm'])->name('jadwal.setting');
+        Route::post('/jadwal/setting', [JadwalController::class, 'settingSave'])->name('jadwal.setting.save');
+        Route::post('/jadwal/generate', [JadwalController::class, 'generate'])->name('jadwal.generate');
+        Route::post('/jadwal/reset', [JadwalController::class, 'reset'])->name('jadwal.reset');
+        Route::get('/jadwal/import/template', [JadwalController::class, 'downloadTemplateExcel'])->name('jadwal.import.template');
+        Route::post('/jadwal/import/excel', [JadwalController::class, 'importExcel'])->name('jadwal.import.excel');
+        Route::get('/jadwal/mapping', [JadwalController::class, 'mappingIndex'])->name('jadwal.mapping');
+        Route::post('/jadwal/mapping', [JadwalController::class, 'mappingSave'])->name('jadwal.mapping.save');
+        Route::delete('/jadwal/mapping/{id}', [JadwalController::class, 'mappingDelete'])->name('jadwal.mapping.delete');
+        Route::get('/jadwal/guru-kode', [JadwalController::class, 'guruKodeIndex'])->name('jadwal.guru-kode');
+        Route::post('/jadwal/guru-kode', [JadwalController::class, 'guruKodeSave'])->name('jadwal.guru-kode.save');
+        Route::delete('/jadwal/guru-kode/{id}', [JadwalController::class, 'guruKodeDelete'])->name('jadwal.guru-kode.delete');
+        Route::post('/jadwal/update-slot', [JadwalController::class, 'updateSlot'])->name('jadwal.update-slot');
+        Route::post('/jadwal/delete-slot', [JadwalController::class, 'deleteSlot'])->name('jadwal.delete-slot');
+        Route::delete('/jadwal/{id}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
+
     });
 
 // ============ Guru Routes ============
 Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     Route::get('/', function () {
-            return view('Guru.pages.dashboard');
-        }
-        )->name('dashboard');
-    });
+        return view('Guru.pages.dashboard');
+    })->name('dashboard');
+
+    // Bank-lokasi guru (Sekarang ada di dalam grup 'guru.')
+    // URL akan menjadi: /guru/bank-lokasi
+    // Nama rute akan menjadi: guru.bank-lokasi-guru.index
+    Route::get('/bank-lokasi', [BanklokasiController::class, 'index_guru'])->name('bank-lokasi-guru.index');
+    Route::post('/bank-lokasi', [BanklokasiController::class, 'store'])->name('bank-lokasi-guru.store');
+    Route::put('/bank-lokasi/{id}', [BanklokasiController::class, 'update'])->name('bank-lokasi-guru.update');
+    Route::delete('/bank-lokasi/{id}', [BanklokasiController::class, 'destroy'])->name('bank-lokasi-guru.destroy');
+
+    // Upload Materi
+    Route::get('/materi', [MateriController::class, 'index'])->name('materi.index');
+    Route::get('/materi/{kelasId}/{mapelId}', [MateriController::class, 'show'])->name('materi.show');
+    Route::post('/materi', [MateriController::class, 'store'])->name('materi.store');
+    Route::put('/materi/{id}', [MateriController::class, 'update'])->name('materi.update');
+    Route::delete('/materi/{id}', [MateriController::class, 'destroy'])->name('materi.destroy');
+});   
 
 require __DIR__ . '/auth.php';

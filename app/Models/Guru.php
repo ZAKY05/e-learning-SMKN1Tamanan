@@ -28,7 +28,27 @@ class Guru extends Model
         'no_telp',
         'alamat',
         'foto_profil',
+        'max_jam_per_minggu',
     ];
+
+    /**
+     * Kode guru per semester
+     */
+    public function guruKodes()
+    {
+        return $this->hasMany(GuruKode::class, 'guru_id', 'id_guru');
+    }
+
+    /**
+     * Get kode for specific tahun_ajaran & semester
+     */
+    public function getKode(string $tahunAjaran, string $semester): ?string
+    {
+        return $this->guruKodes()
+            ->where('tahun_ajaran', $tahunAjaran)
+            ->where('semester', $semester)
+            ->value('kode');
+    }
 
     /**
      * The subjects taught by the teacher.

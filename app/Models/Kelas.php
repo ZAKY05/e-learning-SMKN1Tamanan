@@ -16,6 +16,11 @@ class Kelas extends Model
         'tingkat',
         'jurusan_id',
         'golongan',
+        'is_pkl',
+    ];
+
+    protected $casts = [
+        'is_pkl' => 'boolean',
     ];
 
     public function jurusan()

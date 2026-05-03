@@ -47,7 +47,7 @@
                          <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.kelas.index') }}">Kelas</a></li>
                          <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.jurusan.index') }}">Jurusan</a>
                          </li>
-                         <li class="nxl-item"><a class="nxl-link" href="apps-tasks.html">Jadwal</a></li>
+                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.jadwal.index') }}">Jadwal</a></li>
                      </ul>
                  </li>
                  <li class="nxl-item nxl-hasmenu">

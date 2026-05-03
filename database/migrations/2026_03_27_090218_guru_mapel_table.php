@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('guru_mapel', function(Blueprint $table){
             $table->id();
             $table->unsignedBigInteger('guru_id');
-            $table->unsignedInteger('mapel_id');
+            $table->unsignedBigInteger('mapel_id');
             $table->timestamps();
 
             $table->foreign('guru_id')

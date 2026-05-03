@@ -28,7 +28,7 @@
                  </li>
 
                  {{-- Menu Data --}}
-                 <li class="nxl-item nxl-hasmenu">
+                 <li class="nxl-item nxl-hasmenu mt-2">
                      <a href="javascript:void(0);" class="nxl-link">
                          <span class="nxl-micon"><i class="fa-solid fa-copy"></i></span>
                          <span class="nxl-mtext">Rekap</span><span class="nxl-arrow"><i
@@ -37,12 +37,12 @@
                      <ul class="nxl-submenu">
                          <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.siswa.index') }}">Rekap Presensi</a></li>
                          <li class="nxl-item"><a class="nxl-link" href="reports-leads.html">Rekap Nilai</a></li>
-                         <li class="nxl-item"><a class="nxl-link" href="reports-project.html">Rekap Kuis</a></li>
+                         <li class="nxl-item"><a class="nxl-link" href="reports-project.html">Rekap UTS & UAS</a></li>
                      </ul>
                  </li>
 
                  {{-- Akademik --}}
-                 <li class="nxl-item nxl-hasmenu">
+                 <li class="nxl-item nxl-hasmenu mt-2">
                      <a href="javascript:void(0);" class="nxl-link">
                          <span class="nxl-micon"><i class="fa-solid fa-graduation-cap"></i></span>
                          <span class="nxl-mtext">Pembelajaran</span><span class="nxl-arrow"><i
@@ -51,24 +51,31 @@
                      <ul class="nxl-submenu">
                          <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.kelas.index') }}">Upload Tugas</a>
                          </li>
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.jurusan.index') }}">Uploud Kuis</a>
+                         <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.materi.index') }}">Upload Materi</a>
                          </li>
-                         {{-- <li class="nxl-item"><a class="nxl-link" href="apps-tasks.html">Kuis</a></li> --}}
+                        
                      </ul>
                  </li>
-                 <li class="nxl-item nxl-hasmenu">
+                 <li class="nxl-item nxl-hasmenu mt-2">
                      <a href="javascript:void(0);" class="nxl-link">
-                         <span class="nxl-micon"><i class="fa-solid fa-box-archive"></i></span>
-                         <span class="nxl-mtext">Bank</span><span class="nxl-arrow"><i
+                         <span class="nxl-micon"><i class="fa-solid fa-chalkboard-user"></i></span>
+                         <span class="nxl-mtext">Pokok Ujian</span><span class="nxl-arrow"><i
                                  class="feather-chevron-right"></i></span>
                      </a>
                      <ul class="nxl-submenu">
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.kelas.index') }}">Bank Lokasi</a></li>
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.jurusan.index') }}">Bank materi</a></li>
+                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.kelas.index') }}">Ujian Tengah Semester</a>
+                         </li>
+                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.jurusan.index') }}">Ujian Akhir Semester</a>
+                         </li>
+                         <li class="nxl-item"><a class="nxl-link" href="apps-tasks.html">Kuis Harian</a></li>
                      </ul>
                  </li>
-
-
+                 <li class="nxl-item">
+                     <a href="{{ route('guru.bank-lokasi-guru.index') }}" class="nxl-link">
+                         <span class="nxl-micon"><i class="fa-solid fa-map-location-dot"></i></span>
+                         <span class="nxl-mtext">Bank-Lokasi</span>
+                     </a>
+                 </li>
              </ul>
          </div>
      </div>

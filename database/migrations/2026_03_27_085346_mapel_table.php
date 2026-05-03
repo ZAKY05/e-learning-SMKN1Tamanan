@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
          Schema::create('mapel', function (Blueprint $table) {
-            $table->increments('id_mapel');
+            $table->id('id_mapel');
             $table->string('nama_mapel', 100);
             $table->enum('jenis', ['umum','jurusan']);
             $table->unsignedInteger('jurusan_id')->nullable();

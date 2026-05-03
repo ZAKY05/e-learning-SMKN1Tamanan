@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('nama', 30);
 
             $table->unsignedInteger('jurusan_id')->nullable();
-            $table->unsignedInteger('kelas_id')->nullable();
+            $table->unsignedBigInteger('kelas_id')->nullable();
 
             $table->string('foto_profil', 255)->nullable();
 

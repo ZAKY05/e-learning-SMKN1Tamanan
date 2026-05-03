@@ -65,6 +65,7 @@
                                         <th>Golongan</th>
                                         <th>Nama Kelas</th>
                                         <th>Jumlah Siswa</th>
+                                        <th class="text-center">Status</th>
                                         <th width="150" class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -87,12 +88,20 @@
                                                     {{ $data->students->count() }} Siswa
                                                 </span>
                                             </td>
+                                            <td>
+                                                @if($data->is_pkl)
+                                                    <span class="badge bg-soft-warning text-warning" style="font-size:0.82rem; padding:0.38em 0.65em;">PKL</span>
+                                                @else
+                                                    <span class="badge bg-soft-success text-success" style="font-size:0.82rem; padding:0.38em 0.65em;">Aktif</span>
+                                                @endif
+                                            </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-soft-warning btn-edit-kelas"
                                                     data-bs-toggle="modal" data-bs-target="#modalEditKelas"
                                                     data-id="{{ $data->id_kelas }}" data-tingkat="{{ $data->tingkat }}"
                                                     data-jurusan_id="{{ $data->jurusan_id }}"
-                                                    data-golongan="{{ $data->golongan }}" title="Edit"
+                                                    data-golongan="{{ $data->golongan }}"
+                                                    data-ispkl="{{ $data->is_pkl ? 1 : 0 }}" title="Edit"
                                                     style="font-size:0.88rem; padding:0.3rem 0.6rem; margin-bottom:2px;">
                                                     <i class="feather-edit-2" style="font-size:0.95rem;"></i>
                                                 </button>
@@ -155,6 +164,11 @@
                             <input type="number" name="golongan" class="form-control" placeholder="cth: 1"
                                 min="1" required>
                         </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="is_pkl" id="isPklTambah" value="1">
+                            <label class="form-check-label fw-semibold" for="isPklTambah">Kelas sedang PKL</label>
+                            <small class="d-block text-muted">Centang jika kelas ini sedang PKL (tidak akan dibuatkan jadwal pelajaran).</small>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
@@ -200,6 +214,11 @@
                             <label class="form-label fw-semibold">Golongan <span class="text-danger">*</span></label>
                             <input type="number" name="golongan" id="editGolongan" class="form-control" min="1"
                                 required>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="is_pkl" id="editIsPkl" value="1">
+                            <label class="form-check-label fw-semibold" for="editIsPkl">Kelas sedang PKL</label>
+                            <small class="d-block text-muted">Centang jika kelas ini sedang PKL (tidak akan dibuatkan jadwal pelajaran).</small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -248,12 +267,12 @@
 
     {{-- SCRIPTS --}}
     <script>
-        // Edit modal
         document.querySelectorAll('.btn-edit-kelas').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 document.getElementById('editTingkat').value = this.dataset.tingkat;
                 document.getElementById('editJurusanIdKelas').value = this.dataset.jurusan_id;
                 document.getElementById('editGolongan').value = this.dataset.golongan;
+                document.getElementById('editIsPkl').checked = this.dataset.ispkl == "1";
                 document.getElementById('formEditKelas').action = '{{ url('admin/data-kelas') }}/' + this.dataset.id;
             });
         });
