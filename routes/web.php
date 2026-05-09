@@ -11,6 +11,7 @@ use App\Http\Controllers\MapelController;
 use App\Http\Controllers\BanklokasiController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\MateriController;
+use App\Http\Controllers\PresensiGuruController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -33,10 +34,7 @@ Route::middleware('auth')->group(function () {
 
 // ============ Admin Routes ============
 Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(function () {
-    Route::get('/', function () {
-            return view('Admin.pages.dashboard');
-        }
-        )->name('dashboard');
+    Route::get('/', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Data Siswa
         Route::get('/data-siswa', [SiswaController::class , 'index'])->name('siswa.index');
@@ -126,6 +124,20 @@ Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     Route::post('/materi', [MateriController::class, 'store'])->name('materi.store');
     Route::put('/materi/{id}', [MateriController::class, 'update'])->name('materi.update');
     Route::delete('/materi/{id}', [MateriController::class, 'destroy'])->name('materi.destroy');
+
+    // Upload Tugas
+    Route::get('/tugas', [\App\Http\Controllers\TugasController::class, 'index'])->name('tugas.index');
+    Route::post('/tugas', [\App\Http\Controllers\TugasController::class, 'store'])->name('tugas.store');
+    Route::put('/tugas/{id}', [\App\Http\Controllers\TugasController::class, 'update'])->name('tugas.update');
+    Route::delete('/tugas/{id}', [\App\Http\Controllers\TugasController::class, 'destroy'])->name('tugas.destroy');
+    Route::get('/tugas/{id}/pengumpulan', [\App\Http\Controllers\TugasController::class, 'pengumpulan'])->name('tugas.pengumpulan');
+    Route::put('/pengumpulan/{id}/nilai', [\App\Http\Controllers\TugasController::class, 'nilai'])->name('tugas.nilai');
+
+    // Presensi
+    Route::get('/presensi', [PresensiGuruController::class, 'index'])->name('presensi.index');
+    Route::post('/presensi', [PresensiGuruController::class, 'store'])->name('presensi.store');
+    Route::get('/presensi/{id}', [PresensiGuruController::class, 'show'])->name('presensi.show');
+    Route::post('/presensi/{id}/close', [PresensiGuruController::class, 'close'])->name('presensi.close');
 });   
 
 require __DIR__ . '/auth.php';

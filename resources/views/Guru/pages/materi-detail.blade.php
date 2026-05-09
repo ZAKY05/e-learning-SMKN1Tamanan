@@ -102,6 +102,50 @@
                                         </a>
                                     </div>
                                 @endif
+
+                                {{-- Tugas Section --}}
+                                @if ($materi->tugas)
+                                    <div class="mt-2 p-2 rounded border border-warning" style="background-color: #fffdf5;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="fw-bold text-warning" style="font-size:0.8rem; color: #d97706 !important;"><i class="feather-clipboard me-1"></i>Tugas</span>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-sm btn-link p-0 text-warning btn-edit-tugas"
+                                                    data-bs-toggle="modal" data-bs-target="#modalEditTugas"
+                                                    data-id="{{ $materi->tugas->id_tugas }}"
+                                                    data-judul="{{ $materi->tugas->judul_tugas }}"
+                                                    data-deskripsi="{{ $materi->tugas->deskripsi }}"
+                                                    data-mulai="{{ \Carbon\Carbon::parse($materi->tugas->tanggal_mulai)->format('Y-m-d\TH:i') }}"
+                                                    data-deadline="{{ \Carbon\Carbon::parse($materi->tugas->tanggal_deadline)->format('Y-m-d\TH:i') }}"
+                                                    style="font-size:0.75rem; text-decoration: none;">
+                                                    <i class="feather-edit-2"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-link p-0 text-danger btn-hapus-tugas"
+                                                    data-bs-toggle="modal" data-bs-target="#modalHapusTugas"
+                                                    data-id="{{ $materi->tugas->id_tugas }}"
+                                                    style="font-size:0.75rem; text-decoration: none;">
+                                                    <i class="feather-trash-2"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <h6 class="mb-1 text-dark" style="font-size:0.85rem;">{{ $materi->tugas->judul_tugas }}</h6>
+                                        <small class="text-muted d-block mb-1" style="font-size:0.7rem;">
+                                            <i class="feather-clock me-1"></i> Deadline: <span class="fw-semibold text-danger">{{ \Carbon\Carbon::parse($materi->tugas->tanggal_deadline)->format('d M Y, H:i') }}</span>
+                                        </small>
+                                        @if ($materi->tugas->file_name)
+                                            <a href="{{ asset('storage/' . $materi->tugas->file_path) }}" target="_blank" class="badge bg-warning text-dark text-decoration-none mt-1" style="font-size:0.65rem;">
+                                                <i class="feather-paperclip"></i> Lampiran Tugas
+                                            </a>
+                                        @endif
+                                    </div>
+                                @else
+                                    <button type="button" class="btn btn-outline-warning btn-sm w-100 mt-2 btn-tambah-tugas"
+                                        data-bs-toggle="modal" data-bs-target="#modalTambahTugas"
+                                        data-materi-id="{{ $materi->id_materi }}"
+                                        data-minggu="{{ $minggu }}"
+                                        style="font-size:0.75rem; padding:0.3rem 0.5rem; border-style: dashed;">
+                                        <i class="feather-plus-circle me-1"></i> Tambah Tugas
+                                    </button>
+                                @endif
                                 <div class="d-flex align-items-center justify-content-between mt-2">
                                     <small class="text-muted" style="font-size:0.72rem;">
                                         <i class="feather-calendar me-1"></i>{{ $materi->tanggal_upload }}
@@ -275,6 +319,136 @@
         </div>
     </div>
 
+    {{-- MODAL TAMBAH TUGAS --}}
+    <div class="modal fade" id="modalTambahTugas" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <form action="{{ route('guru.tugas.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="kelas_id" value="{{ $kelas->id_kelas }}">
+                    <input type="hidden" name="mapel_id" value="{{ $mapel->id_mapel }}">
+                    <input type="hidden" name="materi_id" id="tambahTugasMateriId" value="">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="feather-clipboard me-2 text-warning"></i> Tambah Tugas - <span id="tambahTugasMingguLabel"></span>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold">Judul Tugas <span class="text-danger">*</span></label>
+                                <input type="text" name="judul_tugas" class="form-control" placeholder="cth: Latihan Soal..." required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tanggal Mulai <span class="text-danger">*</span></label>
+                                <input type="datetime-local" name="tanggal_mulai" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Batas Pengumpulan (Deadline) <span class="text-danger">*</span></label>
+                                <input type="datetime-local" name="tanggal_deadline" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Deskripsi / Instruksi <span class="text-danger">*</span></label>
+                                <textarea name="deskripsi" class="form-control" rows="4" placeholder="Instruksi pengerjaan tugas..." required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">File Lampiran Tugas</label>
+                                <input type="file" name="file_tugas" class="form-control" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.png">
+                                <small class="text-muted">Format: PDF, DOC, PPT, XLS, ZIP, JPG, PNG. Max 10MB</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-warning text-white">
+                            <i class="feather-save me-1"></i> Simpan Tugas
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL EDIT TUGAS --}}
+    <div class="modal fade" id="modalEditTugas" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <form id="formEditTugas" action="" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="feather-edit me-2 text-warning"></i> Edit Tugas
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold">Judul Tugas <span class="text-danger">*</span></label>
+                                <input type="text" name="judul_tugas" id="editTugasJudul" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tanggal Mulai <span class="text-danger">*</span></label>
+                                <input type="datetime-local" name="tanggal_mulai" id="editTugasMulai" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Batas Pengumpulan (Deadline) <span class="text-danger">*</span></label>
+                                <input type="datetime-local" name="tanggal_deadline" id="editTugasDeadline" class="form-control" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Deskripsi / Instruksi <span class="text-danger">*</span></label>
+                                <textarea name="deskripsi" id="editTugasDeskripsi" class="form-control" rows="4" required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Ganti File Lampiran (opsional)</label>
+                                <input type="file" name="file_tugas" class="form-control" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.jpg,.png">
+                                <small class="text-muted">Kosongkan jika tidak ingin mengganti file.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-warning text-white">
+                            <i class="feather-save me-1"></i> Update Tugas
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL HAPUS TUGAS --}}
+    <div class="modal fade" id="modalHapusTugas" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <form id="formHapusTugas" action="" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-header border-0 pb-0">
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center pt-0">
+                        <div class="avatar-text avatar-lg rounded-circle bg-soft-danger text-danger mx-auto mb-3">
+                            <i class="feather-trash-2 fs-24"></i>
+                        </div>
+                        <h5 class="fw-bold">Hapus Tugas</h5>
+                        <p class="text-muted mb-0">
+                            Yakin ingin menghapus tugas ini? File lampiran dan data pengumpulan siswa akan ikut terhapus.
+                        </p>
+                    </div>
+                    <div class="modal-footer border-0 pt-2 justify-content-center gap-2">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="feather-trash me-1"></i> Hapus
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Tambah materi — set minggu_ke
@@ -301,6 +475,32 @@
                 btn.addEventListener('click', function () {
                     document.getElementById('hapusMingguLabel').textContent = 'Minggu ' + this.dataset.minggu;
                     document.getElementById('formHapusMateri').action = '{{ url("guru/materi") }}/' + this.dataset.id;
+                });
+            });
+
+            // Tambah Tugas
+            document.querySelectorAll('.btn-tambah-tugas').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.getElementById('tambahTugasMateriId').value = this.dataset.materiId;
+                    document.getElementById('tambahTugasMingguLabel').textContent = 'Minggu ' + this.dataset.minggu;
+                });
+            });
+
+            // Edit Tugas
+            document.querySelectorAll('.btn-edit-tugas').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.getElementById('editTugasJudul').value = this.dataset.judul;
+                    document.getElementById('editTugasDeskripsi').value = this.dataset.deskripsi;
+                    document.getElementById('editTugasMulai').value = this.dataset.mulai;
+                    document.getElementById('editTugasDeadline').value = this.dataset.deadline;
+                    document.getElementById('formEditTugas').action = '{{ url("guru/tugas") }}/' + this.dataset.id;
+                });
+            });
+
+            // Hapus Tugas
+            document.querySelectorAll('.btn-hapus-tugas').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.getElementById('formHapusTugas').action = '{{ url("guru/tugas") }}/' + this.dataset.id;
                 });
             });
         });

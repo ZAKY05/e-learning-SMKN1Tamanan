@@ -69,4 +69,16 @@ class Mapel extends Model
     {
         return $this->hasManyThrough(BankSoal::class, Pengajaran::class, 'mapel_id', 'pengajaran_id');
     }
+
+    // Relasi ke materi
+    public function materi()
+    {
+        return $this->hasMany(Materi::class, 'mapel_id', 'id_mapel');
+    }
+
+    // Relasi ke tugas
+    public function tugas()
+    {
+        return $this->hasMany(Tugas::class, 'mapel_id', 'id_mapel');
+    }
 }

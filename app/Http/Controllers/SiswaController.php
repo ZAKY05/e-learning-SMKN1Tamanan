@@ -23,7 +23,7 @@ class SiswaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nis' => 'required|string|max:15|unique:Pelajar,nis',
+            'nis' => 'required|string|max:15|unique:student,nis',
             'nama' => 'required|string|max:30',
             'jurusan_id' => 'nullable|exists:jurusan,id_jurusan',
             'kelas_id' => 'nullable|exists:kelas,id_kelas',
@@ -56,7 +56,7 @@ class SiswaController extends Controller
         $student = Pelajar::findOrFail($id);
 
         $request->validate([
-            'nis' => 'required|string|max:15|unique:Pelajar,nis,' . $id . ',id_siswa',
+            'nis' => 'required|string|max:15|unique:student,nis,' . $id . ',id_siswa',
             'nama' => 'required|string|max:30',
             'jurusan_id' => 'nullable|exists:jurusan,id_jurusan',
             'kelas_id' => 'nullable|exists:kelas,id_kelas',

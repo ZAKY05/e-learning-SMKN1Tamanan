@@ -826,12 +826,22 @@ class JadwalController extends Controller
                 $jamKeRow = $dayRow + 1;
             }
 
-            // 4. Baca nomor Jam Ke dari baris tersebut
+            // 4. Baca nomor Jam Ke dari baris tersebut, batasi hanya untuk section ini
             $jamKeCols = []; // col => jam_ke_number
-            foreach ($rows[$jamKeRow] as $c => $cell) {
-                $v = trim($cell);
+            $lastJam = 0;
+            // Mulai dari kolom hari atau 1-2 kolom sebelumnya karena kolom Hari bisa di-merge
+            $startCol = max(0, $dayCol - 2); 
+            for ($c = $startCol; $c < count($rows[$jamKeRow]); $c++) {
+                $v = trim($rows[$jamKeRow][$c] ?? '');
                 if (is_numeric($v) && (int)$v >= 1 && (int)$v <= 15) {
-                    $jamKeCols[$c] = (int)$v;
+                    $jam = (int)$v;
+                    // Jika jam tiba-tiba kembali ke 1 (atau lebih kecil dari jam sebelumnya), 
+                    // berarti ini sudah masuk jadwal hari lain (side-by-side)
+                    if ($jam <= $lastJam && $lastJam >= 3) {
+                        break;
+                    }
+                    $jamKeCols[$c] = $jam;
+                    $lastJam = $jam;
                 }
             }
             if (empty($jamKeCols)) continue;

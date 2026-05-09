@@ -32,7 +32,12 @@ Route::middleware('guest')->group(function () {
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
         ->name('password.email');
 
-    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+    Route::get('verify-otp', [App\Http\Controllers\Auth\WebOtpController::class, 'show'])
+        ->name('password.otp');
+
+    Route::post('verify-otp', [App\Http\Controllers\Auth\WebOtpController::class, 'verify']);
+
+    Route::get('reset-password', [NewPasswordController::class, 'create'])
         ->name('password.reset');
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])

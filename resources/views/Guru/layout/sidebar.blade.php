@@ -21,7 +21,7 @@
                      </a>
                  </li>
                  <li class="nxl-item">
-                     <a href="{{ route('guru.dashboard') }}" class="nxl-link">
+                     <a href="{{ route('guru.presensi.index') }}" class="nxl-link">
                          <span class="nxl-micon"><i class="fa-solid fa-user-clock"></i></span>
                          <span class="nxl-mtext">Presensi</span>
                      </a>
@@ -49,7 +49,7 @@
                                  class="feather-chevron-right"></i></span>
                      </a>
                      <ul class="nxl-submenu">
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.kelas.index') }}">Upload Tugas</a>
+                         <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.tugas.index') }}">Pengumpulan Tugas</a>
                          </li>
                          <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.materi.index') }}">Upload Materi</a>
                          </li>

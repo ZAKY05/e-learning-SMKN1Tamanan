@@ -74,7 +74,8 @@ class MateriController extends Controller
         $mapel = Mapel::findOrFail($mapelId);
 
         // Ambil semua materi untuk kelas+mapel ini oleh guru ini
-        $materiList = Materi::where('guru_id', $guru->id_guru)
+        $materiList = Materi::with('tugas')
+            ->where('guru_id', $guru->id_guru)
             ->where('kelas_id', $kelasId)
             ->where('mapel_id', $mapelId)
             ->orderBy('minggu_ke')

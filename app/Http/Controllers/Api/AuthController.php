@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request; 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
@@ -12,7 +12,7 @@ use App\Mail\OtpMail;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+   public function login(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
@@ -24,23 +24,81 @@ class AuthController extends Controller
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email atau password salah.',
+                'message' => 'Email atau password salah',
             ], 401);
         }
 
-        $token = $user->createToken('mobile-app')->plainTextToken;
+        $user->load('siswa.kelas', 'guru');
 
+        $token = $user->createToken('mobile')->plainTextToken;
+
+        // ================= BASE DATA =================
+    $userData = [
+    'id' => $user->id,
+    'name' => $user->name,
+    'email' => $user->email,
+    'role' => $user->role,
+    'foto' => null,
+    'kelas' => null,
+    'nis' => null,
+    'nip' => null,
+    'nama_mapel' => null,
+    'no_telp' => null,
+    'alamat' => null,
+];
+
+        // ================= SISWA =================        // 
+if ($user->role === 'siswa' && $user->siswa) {
+
+    $userData['kelas'] = $user->siswa->kelas?->nama_kelas ?? '-';
+    $userData['nis'] = $user->siswa->nis  ?? '-';
+    $userData['foto'] = $user->siswa->foto_profil
+        ? asset($user->siswa->foto_profil)
+        : null;
+}
+
+        // ================= GURU =================
+if ($user->role === 'guru' && $user->guru) {
+
+    $userData['nip'] = $user->guru->nip ?? '-';
+
+    $userData['nama_mapel'] =
+        $user->guru->mapels->pluck('nama_mapel')->join(', ');
+
+    $userData['no_telp'] = $user->guru->no_telp ?? '-';
+
+    $userData['alamat'] = $user->guru->alamat ?? '-';
+
+    $userData['foto'] = $user->guru->foto_profil
+        ? asset($user->guru->foto_profil)
+        : null;
+} 
         return response()->json([
             'success' => true,
             'message' => 'Login berhasil',
             'data' => [
-                'user' => $user,
+                'user' => $userData,
                 'token' => $token,
-                'role' => $user->role,
             ]
-        ], 200);
+        ]);
+    } 
+
+    // ================= CHECK EMAIL =================
+    public function checkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        return response()->json([
+            'success' => (bool) $user,
+            'message' => $user ? 'Email ditemukan' : 'Email tidak terdaftar',
+        ], $user ? 200 : 404);
     }
 
+    // ================= SEND OTP =================
     public function sendOtp(Request $request)
     {
         $request->validate([
@@ -52,30 +110,28 @@ class AuthController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email tidak terdaftar.',
+                'message' => 'Email tidak ditemukan',
             ], 404);
         }
 
-        // Generate OTP 6 digit
-        $otp = mt_rand(100000, 999999);
+        $otp = rand(1000, 9999);
 
-        // Simpan OTP di cache selama 5 menit
         Cache::put('otp_' . $user->email, $otp, now()->addMinutes(5));
 
-        // Kirim email
         Mail::to($user->email)->send(new OtpMail($otp));
 
         return response()->json([
             'success' => true,
-            'message' => 'Kode OTP telah dikirim ke email Anda.',
-        ], 200);
+            'message' => 'OTP dikirim ke email',
+        ]);
     }
 
+    // ================= VERIFY OTP =================
     public function verifyOtp(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'otp' => 'required|numeric'
+            'otp' => 'required|digits:4'
         ]);
 
         $cachedOtp = Cache::get('otp_' . $request->email);
@@ -83,28 +139,55 @@ class AuthController extends Controller
         if (!$cachedOtp || $cachedOtp != $request->otp) {
             return response()->json([
                 'success' => false,
-                'message' => 'Kode OTP tidak valid atau sudah kadaluarsa.',
+                'message' => 'OTP tidak valid atau kadaluarsa',
             ], 400);
         }
 
         $user = User::where('email', $request->email)->first();
 
-        // Hapus OTP dari cache setelah berhasil digunakan
         Cache::forget('otp_' . $request->email);
+
+        $user->load('siswa.kelas', 'siswa.jurusan', 'guru');
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'Verifikasi OTP berhasil',
+            'message' => 'OTP berhasil',
             'data' => [
                 'user' => $user,
                 'token' => $token,
-                'role' => $user->role,
             ]
-        ], 200);
+        ]);
     }
 
+    // ================= RESET PASSWORD =================
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan'
+            ], 404);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah'
+        ]);
+    }
+
+    // ================= LOGOUT =================
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -112,6 +195,42 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Logout berhasil'
-        ], 200);
+        ]);
     }
+    public function updatePassword(Request $request)
+{
+    $user = auth()->user();
+
+    if (!Hash::check($request->old_password, $user->password)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Password lama salah'
+        ], 400);
+    }
+
+    $user->password = Hash::make($request->new_password);
+    $user->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Password berhasil diubah'
+    ]);
 }
+public function updateEmail(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email|unique:users,email',
+    ]);
+
+    $user = auth()->user();
+    $user->email = $request->email;
+    $user->save();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Email berhasil diupdate',
+        'data' => $user
+    ]);
+}
+    
+} 

@@ -42,4 +42,9 @@ class Materi extends Model
     {
         return $this->belongsTo(Mapel::class, 'mapel_id', 'id_mapel');
     }
+
+    public function tugas()
+    {
+        return $this->hasOne(Tugas::class, 'materi_id', 'id_materi');
+    }
 }
