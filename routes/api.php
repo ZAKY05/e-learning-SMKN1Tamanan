@@ -55,4 +55,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/presensi/scan', [\App\Http\Controllers\Api\PresensiApiController::class, 'scanQr']);
     Route::get('/presensi/riwayat', [\App\Http\Controllers\Api\PresensiApiController::class, 'riwayat']);
     Route::get('/presensi/rekap', [\App\Http\Controllers\Api\PresensiApiController::class, 'rekap']);
+
+    // Guru Jadwal Mengajar Routes (untuk mobile guru)
+    Route::get('/guru/jadwal', [\App\Http\Controllers\Api\JadwalGuruApiController::class, 'index']);
+    Route::get('/guru/jadwal/semua', [\App\Http\Controllers\Api\JadwalGuruApiController::class, 'semua']);
+    Route::get('/guru/jadwal/hari-ini', [\App\Http\Controllers\Api\JadwalGuruApiController::class, 'hariIni']);
+    Route::get('/guru/jadwal/notifikasi', [\App\Http\Controllers\Api\JadwalGuruApiController::class, 'notifikasi']);
 });
