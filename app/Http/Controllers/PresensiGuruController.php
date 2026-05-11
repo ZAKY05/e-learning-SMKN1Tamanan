@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Presensi;
+use App\Models\DetailPresensi;
+use App\Models\Student;
 use App\Models\JadwalPelajaran;
 use App\Models\Banklokasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class PresensiGuruController extends Controller
 {
@@ -48,6 +51,25 @@ class PresensiGuruController extends Controller
             ->with(['kelas', 'mapel', 'lokasi'])
             ->orderBy('jam_mulai', 'desc')
             ->get();
+
+        // Hitung status waktu untuk setiap presensi
+        $now = Carbon::now();
+        foreach ($presensiHariIni as $presensi) {
+            $jamSelesai = Carbon::parse($presensi->tanggal . ' ' . $presensi->jam_selesai);
+            $batasTerlambat = $jamSelesai->copy()->addMinutes(30);
+
+            if ($presensi->status === 'aktif') {
+                if ($now->lte($jamSelesai)) {
+                    $presensi->fase_waktu = 'normal'; // Masih dalam jam presensi normal
+                } elseif ($now->lte($batasTerlambat)) {
+                    $presensi->fase_waktu = 'terlambat'; // Dalam masa toleransi 30 menit
+                } else {
+                    $presensi->fase_waktu = 'expired'; // Sudah lewat masa toleransi
+                }
+            } else {
+                $presensi->fase_waktu = 'selesai';
+            }
+        }
 
         return view('Guru.pages.presensi.index', compact('kelasMapel', 'lokasi', 'presensiHariIni'));
     }
@@ -93,10 +115,74 @@ class PresensiGuruController extends Controller
     {
         $guru = Auth::user()->guru;
         $presensi = Presensi::where('guru_id', $guru->id_guru)
-            ->with(['kelas.jurusan', 'mapel', 'lokasi'])
+            ->with(['kelas.jurusan', 'mapel', 'lokasi', 'detailPresensi.siswa'])
             ->findOrFail($id);
 
-        return view('Guru.pages.presensi.show', compact('presensi'));
+        // Ambil semua siswa di kelas ini
+        $semuaSiswa = Student::where('kelas_id', $presensi->kelas_id)
+            ->orderBy('nama', 'asc')
+            ->get();
+
+        // Ambil ID siswa yang sudah absen
+        $siswaHadirIds = $presensi->detailPresensi->pluck('siswa_id')->toArray();
+
+        // Siswa yang belum absen
+        $siswaBelumAbsen = $semuaSiswa->filter(function ($siswa) use ($siswaHadirIds) {
+            return !in_array($siswa->id_siswa, $siswaHadirIds);
+        });
+
+        // Siswa yang sudah absen (dengan detail status)
+        $siswaSudahAbsen = $presensi->detailPresensi->sortBy(function ($detail) {
+            return $detail->siswa->nama ?? '';
+        });
+
+        // Hitung fase waktu
+        $now = Carbon::now();
+        $jamSelesai = Carbon::parse($presensi->tanggal . ' ' . $presensi->jam_selesai);
+        $batasTerlambat = $jamSelesai->copy()->addMinutes(30);
+
+        if ($presensi->status === 'aktif') {
+            if ($now->lte($jamSelesai)) {
+                $faseWaktu = 'normal';
+            } elseif ($now->lte($batasTerlambat)) {
+                $faseWaktu = 'terlambat';
+            } else {
+                $faseWaktu = 'expired';
+            }
+        } else {
+            $faseWaktu = 'selesai';
+        }
+
+        $sisaWaktuTerlambat = null;
+        if ($faseWaktu === 'terlambat') {
+            $sisaWaktuTerlambat = $now->diffInMinutes($batasTerlambat);
+        }
+
+        // Statistik
+        $totalSiswa = $semuaSiswa->count();
+        $totalHadir = $presensi->detailPresensi->where('status_kehadiran', 'hadir')->count();
+        $totalTerlambat = $presensi->detailPresensi->where('status_kehadiran', 'terlambat')->count();
+        $totalSakit = $presensi->detailPresensi->where('status_kehadiran', 'sakit')->count();
+        $totalIzin = $presensi->detailPresensi->where('status_kehadiran', 'izin')->count();
+        $totalAlpha = $presensi->detailPresensi->where('status_kehadiran', 'alpha')->count();
+        $totalBelumAbsen = $siswaBelumAbsen->count();
+
+        return view('Guru.pages.presensi.show', compact(
+            'presensi',
+            'semuaSiswa',
+            'siswaBelumAbsen',
+            'siswaSudahAbsen',
+            'faseWaktu',
+            'sisaWaktuTerlambat',
+            'batasTerlambat',
+            'totalSiswa',
+            'totalHadir',
+            'totalTerlambat',
+            'totalSakit',
+            'totalIzin',
+            'totalAlpha',
+            'totalBelumAbsen'
+        ));
     }
 
     public function close($id)
@@ -107,5 +193,67 @@ class PresensiGuruController extends Controller
         $presensi->update(['status' => 'selesai']);
 
         return redirect()->route('guru.presensi.index')->with('success', 'Presensi berhasil ditutup.');
+    }
+
+    /**
+     * Update status kehadiran siswa yang belum absen (alpha/sakit/izin)
+     */
+    public function updateStatusSiswa(Request $request, $id)
+    {
+        $guru = Auth::user()->guru;
+        $presensi = Presensi::where('guru_id', $guru->id_guru)->findOrFail($id);
+
+        $request->validate([
+            'siswa' => 'required|array',
+            'siswa.*.id_siswa' => 'required|exists:student,id_siswa',
+            'siswa.*.status' => 'required|in:alpha,sakit,izin',
+            'siswa.*.keterangan' => 'nullable|string|max:255',
+        ]);
+
+        foreach ($request->siswa as $data) {
+            DetailPresensi::updateOrCreate(
+                [
+                    'presensi_id' => $presensi->id_presensi,
+                    'siswa_id' => $data['id_siswa'],
+                ],
+                [
+                    'waktu_presensi' => null,
+                    'status_kehadiran' => $data['status'],
+                    'keterangan' => $data['keterangan'] ?? null,
+                ]
+            );
+        }
+
+        return redirect()->route('guru.presensi.show', $id)
+            ->with('success', 'Status kehadiran siswa berhasil diperbarui.');
+    }
+
+    /**
+     * Update status kehadiran individual siswa
+     */
+    public function updateStatusSingle(Request $request, $id, $siswaId)
+    {
+        $guru = Auth::user()->guru;
+        $presensi = Presensi::where('guru_id', $guru->id_guru)->findOrFail($id);
+
+        $request->validate([
+            'status' => 'required|in:hadir,terlambat,alpha,sakit,izin',
+            'keterangan' => 'nullable|string|max:255',
+        ]);
+
+        DetailPresensi::updateOrCreate(
+            [
+                'presensi_id' => $presensi->id_presensi,
+                'siswa_id' => $siswaId,
+            ],
+            [
+                'waktu_presensi' => in_array($request->status, ['hadir', 'terlambat']) ? now()->format('H:i:s') : null,
+                'status_kehadiran' => $request->status,
+                'keterangan' => $request->keterangan ?? null,
+            ]
+        );
+
+        return redirect()->route('guru.presensi.show', $id)
+            ->with('success', 'Status siswa berhasil diubah.');
     }
 }

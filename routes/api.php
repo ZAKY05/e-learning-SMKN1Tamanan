@@ -49,4 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/mapel/{mapelId}', [\App\Http\Controllers\Api\MapelMateriController::class, 'mapelShow']);
     Route::get('/mapel/{mapelId}/materi', [\App\Http\Controllers\Api\MapelMateriController::class, 'materiByMapel']);
     Route::get('/materi/{materiId}', [\App\Http\Controllers\Api\MapelMateriController::class, 'materiShow']);
+
+    // Presensi Routes (untuk scan QR & riwayat kehadiran di mobile)
+    Route::get('/presensi/active', [\App\Http\Controllers\Api\PresensiApiController::class, 'activePresensi']);
+    Route::post('/presensi/scan', [\App\Http\Controllers\Api\PresensiApiController::class, 'scanQr']);
+    Route::get('/presensi/riwayat', [\App\Http\Controllers\Api\PresensiApiController::class, 'riwayat']);
+    Route::get('/presensi/rekap', [\App\Http\Controllers\Api\PresensiApiController::class, 'rekap']);
 });

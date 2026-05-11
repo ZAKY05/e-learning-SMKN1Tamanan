@@ -111,7 +111,13 @@
                                                 <td>{{ $presensi->mapel->nama_mapel }}</td>
                                                 <td>
                                                     @if($presensi->status === 'aktif')
-                                                        <span class="badge bg-success"><i class="feather-activity me-1"></i>Aktif</span>
+                                                        @if($presensi->fase_waktu === 'normal')
+                                                            <span class="badge bg-success"><i class="feather-activity me-1"></i>Aktif</span>
+                                                        @elseif($presensi->fase_waktu === 'terlambat')
+                                                            <span class="badge bg-warning text-dark"><i class="feather-clock me-1"></i>Toleransi Terlambat</span>
+                                                        @elseif($presensi->fase_waktu === 'expired')
+                                                            <span class="badge bg-danger"><i class="feather-alert-triangle me-1"></i>Waktu Habis</span>
+                                                        @endif
                                                     @else
                                                         <span class="badge bg-secondary">Selesai</span>
                                                     @endif

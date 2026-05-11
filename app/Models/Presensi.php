@@ -44,4 +44,9 @@ class Presensi extends Model
     {
         return $this->belongsTo(Banklokasi::class, 'lokasi_id', 'id');
     }
+
+    public function detailPresensi()
+    {
+        return $this->hasMany(DetailPresensi::class, 'presensi_id', 'id_presensi');
+    }
 }

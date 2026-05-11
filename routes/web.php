@@ -12,6 +12,7 @@ use App\Http\Controllers\BanklokasiController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\MateriController;
 use App\Http\Controllers\PresensiGuruController;
+use App\Http\Controllers\GuruDashboardController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -106,9 +107,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
 
 // ============ Guru Routes ============
 Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
-    Route::get('/', function () {
-        return view('Guru.pages.dashboard');
-    })->name('dashboard');
+    Route::get('/', [GuruDashboardController::class, 'index'])->name('dashboard');
 
     // Bank-lokasi guru (Sekarang ada di dalam grup 'guru.')
     // URL akan menjadi: /guru/bank-lokasi
@@ -138,6 +137,8 @@ Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     Route::post('/presensi', [PresensiGuruController::class, 'store'])->name('presensi.store');
     Route::get('/presensi/{id}', [PresensiGuruController::class, 'show'])->name('presensi.show');
     Route::post('/presensi/{id}/close', [PresensiGuruController::class, 'close'])->name('presensi.close');
+    Route::post('/presensi/{id}/update-status', [PresensiGuruController::class, 'updateStatusSiswa'])->name('presensi.updateStatus');
+    Route::post('/presensi/{id}/update-status/{siswaId}', [PresensiGuruController::class, 'updateStatusSingle'])->name('presensi.updateStatusSingle');
 });   
 
 require __DIR__ . '/auth.php';
