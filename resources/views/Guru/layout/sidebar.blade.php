@@ -63,12 +63,10 @@
                                  class="feather-chevron-right"></i></span>
                      </a>
                      <ul class="nxl-submenu">
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.kelas.index') }}">Ujian Tengah Semester</a>
                          </li>
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.jurusan.index') }}">Ujian Akhir Semester</a>
-                         </li>
-                         <li class="nxl-item"><a class="nxl-link" href="apps-tasks.html">Kuis Harian</a></li>
+                         <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.kuis.index') }}">Manajemen Kuis / Ujian</a></li>
                      </ul>
+                     
                  </li>
                  <li class="nxl-item">
                      <a href="{{ route('guru.bank-lokasi-guru.index') }}" class="nxl-link">

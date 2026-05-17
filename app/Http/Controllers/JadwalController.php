@@ -868,6 +868,8 @@ class JadwalController extends Controller
             // 6. Baca data kelas mulai dari 2-3 baris di bawah jamKeRow
             $dataStart = $jamKeRow + 2;
             $emptyCount = 0;
+            // Log section start info
+
             for ($r = $dataStart; $r < count($rows); $r++) {
                 $namaKelas = strtoupper(trim($rows[$r][$kelasCol] ?? ''));
                 
@@ -902,9 +904,11 @@ class JadwalController extends Controller
                     }
                 }
                 if (!$kId) {
+
                     if (!in_array($namaKelas, $unmatchedKelas)) $unmatchedKelas[] = $namaKelas;
                     continue;
                 }
+
 
                 // 7. Baca setiap kolom jam - sort kolom agar urut
                 $sortedJamCols = $jamKeCols;
@@ -913,6 +917,9 @@ class JadwalController extends Controller
                 $prevCol = -99;
                 foreach ($sortedJamCols as $c => $jamKe) {
                     $cellValue = trim($rows[$r][$c] ?? '');
+                    
+                    // DEBUG: log raw cell for K3R
+
                     
                     // Fill-forward: jika kosong dan kolom bersebelahan, kemungkinan merged cell
                     if (empty($cellValue) || $cellValue === '-') {
@@ -931,7 +938,7 @@ class JadwalController extends Controller
                     // Parse "MAPEL / KODE" atau "MAPEL"
                     $parts = preg_split('/\s*\/\s*/', $cellValue, 2);
                     $mapelSingkatan = strtoupper(trim($parts[0] ?? ''));
-                    $kodeGuru = trim($parts[1] ?? '');
+                    $kodeGuru = strtoupper(trim($parts[1] ?? ''));
 
                     // Skip slot khusus
                     $skipWords = ['upacara','istirahat','sholat','dhuhur','istirah'];
@@ -951,6 +958,16 @@ class JadwalController extends Controller
                     $gId = null;
                     if ($kodeGuru) {
                         $gId = $guruKodes[$kodeGuru] ?? null;
+                        // Fallback: cari case-insensitive
+                        if (!$gId) {
+                            foreach ($guruKodes as $kode => $guruId) {
+                                if (strtoupper($kode) === $kodeGuru) {
+                                    $gId = $guruId;
+                                    break;
+                                }
+                            }
+                        }
+
                     }
 
                     $jadwalBaru[] = [
@@ -964,6 +981,7 @@ class JadwalController extends Controller
                         'created_at'   => now(),
                         'updated_at'   => now(),
                     ];
+
                     $inserted++;
                 }
             }
@@ -973,34 +991,31 @@ class JadwalController extends Controller
         JadwalPelajaran::where('tahun_ajaran', $tahunAjaran)
             ->where('semester', $semester)->delete();
 
-        // Deduplikasi kelas: jika ada kelas+hari+jam_ke yang sama, ambil yang terakhir
+
+
+        // Deduplikasi kelas: jika ada kelas+hari+jam_ke yang sama, prioritaskan yang punya guru
         $uniqueJadwal = [];
         foreach ($jadwalBaru as $j) {
             $key = $j['kelas_id'] . '-' . $j['hari'] . '-' . $j['jam_ke'];
-            $uniqueJadwal[$key] = $j;
-        }
-        
-        // Deduplikasi guru: jika ada guru+hari+jam_ke yang sama (guru mengajar 2 kelas bersamaan), 
-        // kosongkan guru_id pada entri duplikat agar tidak melanggar constraint
-        $guruUsed = [];
-        foreach ($uniqueJadwal as $key => &$j) {
-            if ($j['guru_id']) {
-                $gKey = $j['guru_id'] . '-' . $j['hari'] . '-' . $j['jam_ke'];
-                if (isset($guruUsed[$gKey])) {
-                    $j['guru_id'] = null; // Kosongkan guru duplikat, bisa diisi manual nanti
-                } else {
-                    $guruUsed[$gKey] = true;
+            if (!isset($uniqueJadwal[$key])) {
+                // Belum ada, simpan langsung
+                $uniqueJadwal[$key] = $j;
+            } else {
+                // Sudah ada: simpan yang punya guru_id (prioritas)
+                if ($j['guru_id'] && !$uniqueJadwal[$key]['guru_id']) {
+                    $uniqueJadwal[$key] = $j;
                 }
             }
         }
-        unset($j);
+        
+
         
         $jadwalBaru = array_values($uniqueJadwal);
         $inserted = count($jadwalBaru);
 
         if (!empty($jadwalBaru)) {
             foreach (array_chunk($jadwalBaru, 100) as $chunk) {
-                JadwalPelajaran::insertOrIgnore($chunk);
+                JadwalPelajaran::insert($chunk);
             }
         }
 

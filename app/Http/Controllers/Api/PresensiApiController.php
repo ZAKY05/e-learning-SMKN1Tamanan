@@ -59,23 +59,27 @@ class PresensiApiController extends Controller
                 ->first();
 
             $result[] = [
-                'id_presensi' => $presensi->id_presensi,
-                'mapel' => $presensi->mapel->nama_mapel ?? '-',
-                'guru' => $presensi->guru->nama ?? '-',
-                'kelas' => $presensi->kelas->nama_kelas ?? '-',
-                'lokasi' => [
-                    'nama' => $presensi->lokasi->nama_lokasi ?? '-',
-                    'latitude' => $presensi->lokasi->latitude ?? null,
-                    'longitude' => $presensi->lokasi->longitude ?? null,
-                    'radius' => $presensi->lokasi->radius ?? null,
-                ],
-                'jam_mulai' => $presensi->jam_mulai,
-                'jam_selesai' => $presensi->jam_selesai,
-                'batas_terlambat' => $batasTerlambat->format('H:i:s'),
-                'fase_waktu' => $faseWaktu,
-                'sisa_waktu_menit' => $faseWaktu === 'terlambat'
-                    ? $now->diffInMinutes($batasTerlambat)
-                    : $now->diffInMinutes($jamSelesai),
+            'id_presensi' => $presensi->id_presensi,
+            'mapel' => $presensi->mapel->nama_mapel ?? '-',
+            'guru' => $presensi->guru->nama ?? '-',
+            'kelas' => $presensi->kelas->nama_kelas ?? '-',
+
+            // TAMBAHAN INI
+            'qr_code' => $presensi->qr_code,
+
+            'lokasi' => [
+                'nama' => $presensi->lokasi->nama_lokasi ?? '-',
+                'latitude' => $presensi->lokasi->latitude ?? null,
+                'longitude' => $presensi->lokasi->longitude ?? null,
+                'radius' => $presensi->lokasi->radius ?? null,
+            ],
+            'jam_mulai' => $presensi->jam_mulai,
+            'jam_selesai' => $presensi->jam_selesai,
+            'batas_terlambat' => $batasTerlambat->format('H:i:s'),
+            'fase_waktu' => $faseWaktu,
+            'sisa_waktu_menit' => $faseWaktu === 'terlambat'
+                ? $now->diffInMinutes($batasTerlambat)
+                : $now->diffInMinutes($jamSelesai),
                 'sudah_absen' => $sudahAbsen ? true : false,
                 'status_kehadiran' => $sudahAbsen ? $sudahAbsen->status_kehadiran : null,
                 'waktu_presensi' => $sudahAbsen ? $sudahAbsen->waktu_presensi : null,

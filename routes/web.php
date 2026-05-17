@@ -89,7 +89,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
         Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal.index');
         Route::get('/jadwal/setting', [JadwalController::class, 'settingForm'])->name('jadwal.setting');
         Route::post('/jadwal/setting', [JadwalController::class, 'settingSave'])->name('jadwal.setting.save');
-        Route::post('/jadwal/generate', [JadwalController::class, 'generate'])->name('jadwal.generate');
+
         Route::post('/jadwal/reset', [JadwalController::class, 'reset'])->name('jadwal.reset');
         Route::get('/jadwal/import/template', [JadwalController::class, 'downloadTemplateExcel'])->name('jadwal.import.template');
         Route::post('/jadwal/import/excel', [JadwalController::class, 'importExcel'])->name('jadwal.import.excel');
@@ -139,6 +139,14 @@ Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     Route::post('/presensi/{id}/close', [PresensiGuruController::class, 'close'])->name('presensi.close');
     Route::post('/presensi/{id}/update-status', [PresensiGuruController::class, 'updateStatusSiswa'])->name('presensi.updateStatus');
     Route::post('/presensi/{id}/update-status/{siswaId}', [PresensiGuruController::class, 'updateStatusSingle'])->name('presensi.updateStatusSingle');
+
+    // Kuis
+    Route::resource('/kuis', App\Http\Controllers\KuisGuruController::class);
+    Route::post('/kuis/{kuis}/soal', [App\Http\Controllers\KuisGuruController::class, 'storeSoal'])->name('kuis.soal.store');
+    Route::delete('/kuis/{kuis}/soal/{soal}', [App\Http\Controllers\KuisGuruController::class, 'destroySoal'])->name('kuis.soal.destroy');
+    Route::get('/kuis/{kuis}/hasil', [App\Http\Controllers\KuisGuruController::class, 'hasil'])->name('kuis.hasil');
+    Route::get('/kuis/{kuis}/hasil/{hasil_id}', [App\Http\Controllers\KuisGuruController::class, 'review'])->name('kuis.hasil.review');
+    Route::post('/kuis/hasil/nilai-essay', [App\Http\Controllers\KuisGuruController::class, 'nilaiEssay'])->name('kuis.hasil.nilai_essay');
 });   
 
 require __DIR__ . '/auth.php';

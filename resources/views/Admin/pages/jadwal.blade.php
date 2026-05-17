@@ -82,9 +82,7 @@
                                 <button type="submit" class="btn btn-primary btn-sm" style="font-size:0.9rem; padding:0.4rem 0.95rem;">
                                     <i class="feather-filter me-1"></i> Tampilkan
                                 </button>
-                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalGenerate" style="font-size:0.9rem; padding:0.4rem 0.95rem;">
-                                    <i class="feather-zap me-1"></i> Generate
-                                </button>
+
                                 <button type="button" class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#modalImport" style="font-size:0.9rem; padding:0.4rem 0.95rem;">
                                     <i class="feather-upload me-1"></i> Import Excel
                                 </button>
@@ -204,7 +202,7 @@
                                                                     $kodeGuru = '';
 
                                                                     if ($jd->mapel->isProduktif()) {
-                                                                        // Jika mapel produktif, tampilkan nama mapel saja (tanpa kode guru jika belum diset)
+                                                                        // Mapel produktif: tampilkan tanpa kode guru (memang belum ditentukan Kaprog)
                                                                         $text = '<strong>' . $kodeMapel . '</strong>';
                                                                         if ($jd->guru_id) {
                                                                             $kGuru = $guruKodes[$jd->guru_id] ?? '?';
@@ -212,7 +210,11 @@
                                                                         }
                                                                     } else {
                                                                         // Mapel umum: MAPEL / KODE_GURU
-                                                                        $kGuru = $jd->guru_id ? ($guruKodes[$jd->guru_id] ?? '?') : '?';
+                                                                        if ($jd->guru_id) {
+                                                                            $kGuru = $guruKodes[$jd->guru_id] ?? '?';
+                                                                        } else {
+                                                                            $kGuru = '<span class="text-danger">?</span>';
+                                                                        }
                                                                         $text = '<strong>' . $kodeMapel . '</strong> / ' . $kGuru;
                                                                     }
 
@@ -248,38 +250,7 @@
 @endsection
 
 @push('modals')
-    {{-- MODAL GENERATE --}}
-    <div class="modal fade" id="modalGenerate" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content">
-                <form action="{{ route('admin.jadwal.generate') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="tahun_ajaran" value="{{ $tahunAjaran }}">
-                    <input type="hidden" name="semester" value="{{ $semester }}">
-                    <div class="modal-header border-0 pb-0">
-                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body text-center pt-0">
-                        <div class="avatar-text avatar-lg rounded-circle bg-soft-success text-success mx-auto mb-3">
-                            <i class="feather-zap fs-24"></i>
-                        </div>
-                        <h5 class="fw-bold">Generate Jadwal</h5>
-                        <p class="text-muted mb-0" style="font-size:0.9rem;">
-                            Generate jadwal otomatis untuk <strong>{{ ucfirst($semester) }} {{ $tahunAjaran }}</strong>?<br>
-                            Pastikan <strong>Pengaturan Jadwal</strong> (Jam per hari & Kode Guru) sudah benar.
-                            @if ($hasJadwal)
-                                <br><span class="text-danger mt-2 d-block" style="font-size:0.82rem;">⚠ Jadwal lama akan ditimpa!</span>
-                            @endif
-                        </p>
-                    </div>
-                    <div class="modal-footer border-0 pt-2 justify-content-center gap-2">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success px-4">Generate</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+
 
     {{-- Modal Import --}}
     <div class="modal fade" id="modalImport" tabindex="-1">

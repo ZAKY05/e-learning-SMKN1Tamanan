@@ -156,7 +156,7 @@
 
         /* ===== Attendance Banner ===== */
         .attendance-banner {
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 40%, #166534 100%);
+            background: linear-gradient(135deg, #16a34a 0%, #29AE24 40%, #29AE24 100%);
             border-radius: 20px;
             padding: 36px 40px;
             color: #ffffff;
@@ -483,9 +483,6 @@
                     Mari kita lihat perkembangan siswa hari ini.
                 </p>
             </div>
-            <a href="javascript:void(0);" class="btn-export-laporan" onclick="window.print()">
-                <i class="feather-download"></i> Ekspor Laporan
-            </a>
         </div>
 
         {{-- Stat Cards --}}
