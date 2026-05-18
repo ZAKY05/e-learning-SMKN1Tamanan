@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Tugas;
 use App\Models\Materi;
+use App\Services\FcmService;
+use App\Models\Mapel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -64,6 +66,23 @@ class TugasController extends Controller
         }
 
         Tugas::create($data);
+        $tugas = Tugas::latest()->first(); // Ambil tugas yang baru saja dibuat
+        $mapel = Mapel::find($request->mapel_id);
+        $siswaIds = \App\Models\Student::with('user')
+            ->where('kelas_id', $request->kelas_id)
+            ->get()
+            ->map(fn($siswa) => $siswa->user?->id)
+            ->filter()
+            ->values()
+            ->toArray();
+
+        FcmService::kirimKeBanyakUser(
+            $siswaIds,
+            'tugas',
+            'Tugas Baru - ' . ($mapel->nama_mapel ?? ''),
+            'Guru telah mengupload tugas baru: "' . $request->judul_tugas . '"',
+            ['tugas_id' => (string)$tugas->id_tugas]
+        );
 
         return redirect()
             ->back()

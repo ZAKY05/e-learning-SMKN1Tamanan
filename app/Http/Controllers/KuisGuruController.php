@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\FcmService;
 use App\Models\Kuis;
 use App\Models\SoalKuis;
 use App\Models\PilihanJawaban;
@@ -66,6 +67,26 @@ class KuisGuruController extends Controller
             'tampilkan_nilai' => $request->has('tampilkan_nilai'),
             'status' => $request->status ?? 'draft',
         ]);
+
+
+        if (($request->status ?? 'draft') === 'published') {
+            $mapel = \App\Models\Mapel::find($request->mapel_id);
+            $siswaIds = \App\Models\Student::with('user')
+                ->where('kelas_id', $request->kelas_id)
+                ->get()
+                ->map(fn($siswa) => $siswa->user?->id)
+                ->filter()
+                ->values()
+                ->toArray();
+
+            FcmService::kirimKeBanyakUser(
+                $siswaIds,
+                'kuis',
+                'Kuis Tersedia - ' . ($mapel->nama_mapel ?? ''),
+                $request->judul_kuis . ' sudah tersedia. Segera kerjakan!',
+                ['kuis_id' => (string)$kuis->id_kuis]
+            );
+        }
 
         // Simpan soal jika ada yang dikirim dari halaman create
         if ($request->has('soal') && is_array($request->soal)) {

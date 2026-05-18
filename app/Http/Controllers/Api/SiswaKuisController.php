@@ -34,7 +34,7 @@ class SiswaKuisController extends Controller
         // Ambil kuis yang ditugaskan ke kelas siswa
         $kuis = Kuis::with(['mapel', 'materi', 'guru'])
             ->where('kelas_id', $kelasId)
-            ->where('status', 'aktif')
+            ->where('status', 'published')
             ->orderBy('tanggal_mulai', 'desc')
             ->get();
 

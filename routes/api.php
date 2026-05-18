@@ -2,6 +2,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\NotifikasiController;
+
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -69,4 +71,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/kuis/{id}/soal', [\App\Http\Controllers\Api\SiswaKuisController::class, 'getSoal']);
     Route::post('/kuis/{id}/submit', [\App\Http\Controllers\Api\SiswaKuisController::class, 'submit']);
     Route::get('/kuis/{id}/result', [\App\Http\Controllers\Api\SiswaKuisController::class, 'result']);
+
+    Route::prefix('notifikasi')->group(function () {
+    Route::get('/',                 [NotifikasiController::class, 'index']);
+    Route::get('/unread-count',     [NotifikasiController::class, 'unreadCount']);
+    Route::post('/baca-semua',      [NotifikasiController::class, 'bacaSemua']);
+    Route::post('/{id}/baca',       [NotifikasiController::class, 'baca']);
+    Route::post('/update-token',    [NotifikasiController::class, 'updateFcmToken']);
+     });
 });

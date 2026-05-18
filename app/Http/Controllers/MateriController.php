@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\FcmService;
 use App\Models\Materi;
 use App\Models\Kelas;
 use App\Models\Mapel;
@@ -130,6 +131,23 @@ class MateriController extends Controller
         }
 
         Materi::create($data);
+        $materi = Materi::latest()->first(); // Ambil materi yang baru saja dibuat
+        $mapel = Mapel::find($request->mapel_id);
+        $siswaIds = \App\Models\Student::with('user')
+            ->where('kelas_id', $request->kelas_id)
+            ->get()
+            ->map(fn($siswa) => $siswa->user?->id)
+            ->filter()
+            ->values()
+            ->toArray();
+
+        FcmService::kirimKeBanyakUser(
+            $siswaIds,
+            'materi',
+            'Materi Baru - ' . $mapel->nama_mapel,
+            'Guru mengupload materi baru: "' . $request->judul_materi . '"',
+            ['kelas_id' => (string)$request->kelas_id, 'mapel_id' => (string)$request->mapel_id]
+        );
 
         return redirect()
             ->route('guru.materi.show', [$request->kelas_id, $request->mapel_id])

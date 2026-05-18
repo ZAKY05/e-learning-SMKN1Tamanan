@@ -25,6 +25,7 @@ class User extends Authenticatable
         'role',
         'guru_id',
         'siswa_id',
+        'fcm_token',
     ];
 
     /**
