@@ -61,4 +61,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/guru/jadwal/semua', [\App\Http\Controllers\Api\JadwalGuruApiController::class, 'semua']);
     Route::get('/guru/jadwal/hari-ini', [\App\Http\Controllers\Api\JadwalGuruApiController::class, 'hariIni']);
     Route::get('/guru/jadwal/notifikasi', [\App\Http\Controllers\Api\JadwalGuruApiController::class, 'notifikasi']);
+    
+    // Siswa Kuis Routes (untuk mobile siswa)
+    Route::get('/kuis', [\App\Http\Controllers\Api\SiswaKuisController::class, 'index']);
+    Route::get('/kuis/{id}', [\App\Http\Controllers\Api\SiswaKuisController::class, 'show']);
+    Route::post('/kuis/{id}/start', [\App\Http\Controllers\Api\SiswaKuisController::class, 'start']);
+    Route::get('/kuis/{id}/soal', [\App\Http\Controllers\Api\SiswaKuisController::class, 'getSoal']);
+    Route::post('/kuis/{id}/submit', [\App\Http\Controllers\Api\SiswaKuisController::class, 'submit']);
+    Route::get('/kuis/{id}/result', [\App\Http\Controllers\Api\SiswaKuisController::class, 'result']);
 });
