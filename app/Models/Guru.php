@@ -29,6 +29,7 @@ class Guru extends Model
         'alamat',
         'foto_profil',
         'max_jam_per_minggu',
+        'fcm_token',
     ];
 
     /**

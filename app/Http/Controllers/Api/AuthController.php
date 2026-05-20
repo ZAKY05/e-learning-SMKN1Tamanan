@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use App\Models\User;
+use App\Models\Guru;
+use App\Models\Pelajar;
 use App\Mail\OtpMail;
 
 class AuthController extends Controller
@@ -17,6 +19,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
+            'fcm_token' => 'nullable|string|max:512',
         ]);
 
         $user = User::where('email', $request->email)->first();
@@ -29,6 +32,11 @@ class AuthController extends Controller
         }
 
         $user->load('siswa.kelas', 'guru');
+
+        // ================= SIMPAN FCM TOKEN =================
+        if ($request->filled('fcm_token')) {
+            $this->saveFcmToken($user, $request->fcm_token);
+        }
 
         $token = $user->createToken('mobile')->plainTextToken;
 
@@ -190,7 +198,12 @@ if ($user->role === 'guru' && $user->guru) {
     // ================= LOGOUT =================
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+
+        // Hapus FCM token saat logout agar tidak menerima notifikasi lagi
+        $this->clearFcmToken($user);
+
+        $user->currentAccessToken()->delete();
 
         return response()->json([
             'success' => true,
@@ -232,5 +245,68 @@ public function updateEmail(Request $request)
         'data' => $user
     ]);
 }
-    
+
+    // ================= UPDATE FCM TOKEN =================
+    /**
+     * Update FCM token dari Flutter (dipanggil saat token refresh)
+     */
+    public function updateFcmToken(Request $request)
+    {
+        $request->validate([
+            'fcm_token' => 'required|string|max:512',
+        ]);
+
+        $user = $request->user();
+        $this->saveFcmToken($user, $request->fcm_token);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'FCM token berhasil diupdate',
+        ]);
+    }
+
+    // ================= REMOVE FCM TOKEN =================
+    /**
+     * Hapus FCM token (untuk unregister notifikasi)
+     */
+    public function removeFcmToken(Request $request)
+    {
+        $user = $request->user();
+        $this->clearFcmToken($user);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'FCM token berhasil dihapus',
+        ]);
+    }
+
+    // ================= HELPER: SAVE FCM TOKEN =================
+    /**
+     * Simpan FCM token ke tabel guru/student berdasarkan role user
+     */
+    private function saveFcmToken(User $user, string $fcmToken): void
+    {
+        if ($user->role === 'guru' && $user->guru_id) {
+            Guru::where('id_guru', $user->guru_id)
+                ->update(['fcm_token' => $fcmToken]);
+        } elseif ($user->role === 'siswa' && $user->siswa_id) {
+            Pelajar::where('id_siswa', $user->siswa_id)
+                ->update(['fcm_token' => $fcmToken]);
+        }
+    }
+
+    // ================= HELPER: CLEAR FCM TOKEN =================
+    /**
+     * Hapus FCM token dari tabel guru/student
+     */
+    private function clearFcmToken(User $user): void
+    {
+        if ($user->role === 'guru' && $user->guru_id) {
+            Guru::where('id_guru', $user->guru_id)
+                ->update(['fcm_token' => null]);
+        } elseif ($user->role === 'siswa' && $user->siswa_id) {
+            Pelajar::where('id_siswa', $user->siswa_id)
+                ->update(['fcm_token' => null]);
+        }
+    }
 } 

@@ -425,7 +425,7 @@ class JadwalGuruApiController extends Controller
             7  => 'Juli',     8  => 'Agustus',  9  => 'September',
             10 => 'Oktober',  11 => 'November', 12 => 'Desember',
         ];
-
+ 
         $hari = $hariLabel[$date->format('l')] ?? '';
         $bulan = $bulanLabel[(int)$date->format('m')] ?? '';
 

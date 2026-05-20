@@ -19,6 +19,7 @@ class Pelajar extends Model
         'jurusan_id',
         'kelas_id',
         'foto_profil',
+        'fcm_token',
     ];
 
     public function jurusan()
