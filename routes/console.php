@@ -9,3 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('jadwal:reminder')->hourly();
+Schedule::command('jadwal:reminder')->hourly();
+Schedule::command('jadwal:notify-guru')->everyMinute();

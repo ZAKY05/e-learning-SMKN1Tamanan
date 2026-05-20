@@ -24,5 +24,8 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with(config('app.url'), 'https')) {
             URL::forceScheme('https');
         }
+
+        // Register Observers
+        \App\Models\Presensi::observe(\App\Observers\PresensiObserver::class);
     }
 }

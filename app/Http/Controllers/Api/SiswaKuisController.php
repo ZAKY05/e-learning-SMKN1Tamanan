@@ -74,9 +74,13 @@ class SiswaKuisController extends Controller
             return response()->json(['success' => false, 'message' => 'Kuis tidak ditemukan'], 404);
         }
 
-        // Pastikan kuis untuk kelas siswa
+        // Pastikan kuis untuk kelas siswa dan statusnya published
         if ($kuis->kelas_id != $user->siswa->kelas_id) {
             return response()->json(['success' => false, 'message' => 'Kuis ini bukan untuk kelas Anda'], 403);
+        }
+
+        if ($kuis->status !== 'published') {
+            return response()->json(['success' => false, 'message' => 'Kuis tidak tersedia'], 403);
         }
 
         $siswaId = $user->siswa->id_siswa;
@@ -105,8 +109,8 @@ class SiswaKuisController extends Controller
 
         $kuis = Kuis::find($id);
 
-        if (!$kuis) {
-            return response()->json(['success' => false, 'message' => 'Kuis tidak ditemukan'], 404);
+        if (!$kuis || $kuis->status !== 'published') {
+            return response()->json(['success' => false, 'message' => 'Kuis tidak ditemukan atau tidak tersedia'], 404);
         }
 
         $siswaId = $user->siswa->id_siswa;
