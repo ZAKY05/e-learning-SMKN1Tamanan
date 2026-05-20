@@ -79,47 +79,61 @@ class JadwalReminderCommand extends Command
     }
 
     // ── Reminder H-1 jam (kirim tiap jam, cek jadwal 1 jam ke depan) ──────────
-    private function kirimReminderH1Jam(Carbon $now, string $tahunAjaran, string $semester): void
-    {
-        $satu_jam_lagi = $now->copy()->addHour();
-        $hariIni       = $this->carbonDayToHari($now->dayOfWeek);
-        if (!$hariIni) return;
+    private function kirimReminderH1Jam(Carbon $now, string $tahunAjaran, string $semester)
+{
+    // Ambil semua jadwal guru hari ini
+    $hariIni = $this->carbonDayToHari($now->dayOfWeek);
 
-        // Hitung jam ke berapa 1 jam dari sekarang berdasarkan waktu mulai sekolah
-        $waktuMulai = $this->getWaktuMulai($tahunAjaran, $semester); // Carbon
-        $durasi     = $this->getDurasiJam($tahunAjaran, $semester);  // menit (default 45)
-
-        if (!$waktuMulai) return;
-
-        $jamKe = $this->hitungJamKe($satu_jam_lagi, $waktuMulai, $durasi);
-        if (!$jamKe) return;
-
-        $jadwalList = $this->getJadwalHariJam($hariIni, $jamKe, $tahunAjaran, $semester);
-
-        foreach ($jadwalList as $j) {
-            if (!$j->guru_user_id) continue;
-
-            FcmService::kirimKeUser(
-                userId: (int) $j->guru_user_id,
-                tipe:   'jadwal_guru',
-                judul:  'Segera Mengajar!',
-                isi:    "1 jam lagi kamu mengajar {$j->nama_mapel} di kelas {$j->nama_kelas} (jam ke-{$j->jam_ke})",
-                data:   ['screen' => 'jadwal_guru'],
-            );
-        }
-
-        $this->info("Reminder H-1 jam: " . count($jadwalList) . " jadwal.");
+    if (!$hariIni) {
+        return;
     }
 
+    $jadwalList = $this->getJadwalHari(
+        $hariIni,
+        $tahunAjaran,
+        $semester
+    );
+
+    foreach ($jadwalList as $j) {
+
+        if (!$j->guru_user_id) {
+            continue;
+        }
+
+        // TEST DELAY 1 MENIT
+        $waktuNotif = $now->copy()->addMinute();
+
+        FcmService::kirimKeUser(
+            userId: (int) $j->guru_user_id,
+
+            tipe: 'jadwal_guru',
+
+            judul: 'TEST FOREGROUND/BACKGROUND',
+
+            isi: "Notif test {$j->nama_mapel} kelas {$j->nama_kelas}",
+
+            data: [
+                'screen' => 'jadwal_guru',
+                'role' => 'guru',
+                'kelas' => $j->nama_kelas,
+                'mapel' => $j->nama_mapel,
+                'test_time' => $waktuNotif->format('H:i:s'),
+            ],
+        );
+    }
+
+    $this->info("TEST notif berhasil dikirim");
+}
     // ── Query helpers ──────────────────────────────────────────────────────────
 
     private function getJadwalHari(string $hari, string $tahunAjaran, string $semester)
     {
         return DB::table('jadwal_pelajaran as jp')
             ->join('guru as g', 'g.id_guru', '=', 'jp.guru_id')
-            ->join('users as u', 'u.id', '=', 'g.user_id')
+            ->join('users as u', 'u.guru_id', '=', 'g.id_guru')
             ->join('mapel as m', 'm.id_mapel', '=', 'jp.mapel_id')
             ->join('kelas as k', 'k.id_kelas', '=', 'jp.kelas_id')
+            ->join('jurusan as j', 'j.id_jurusan', '=', 'k.jurusan_id')
             ->where('jp.hari', $hari)
             ->where('jp.tahun_ajaran', $tahunAjaran)
             ->where('jp.semester', $semester)
@@ -128,19 +142,26 @@ class JadwalReminderCommand extends Command
                 'u.id as guru_user_id',
                 'g.nama as nama_guru',
                 'm.nama_mapel',
-                'k.nama_kelas',
+                'k.tingkat',
+                'j.nama_jurusan',
+                'k.golongan',
                 'jp.jam_ke',
             )
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->nama_kelas = $item->tingkat . ' ' . $item->nama_jurusan . ' ' . $item->golongan;
+                return $item;
+            });
     }
 
     private function getJadwalHariJam(string $hari, int $jamKe, string $tahunAjaran, string $semester)
     {
         return DB::table('jadwal_pelajaran as jp')
             ->join('guru as g', 'g.id_guru', '=', 'jp.guru_id')
-            ->join('users as u', 'u.id', '=', 'g.user_id')
+            ->join('users as u', 'u.guru_id', '=', 'g.id_guru')
             ->join('mapel as m', 'm.id_mapel', '=', 'jp.mapel_id')
             ->join('kelas as k', 'k.id_kelas', '=', 'jp.kelas_id')
+            ->join('jurusan as j', 'j.id_jurusan', '=', 'k.jurusan_id')
             ->where('jp.hari', $hari)
             ->where('jp.jam_ke', $jamKe)
             ->where('jp.tahun_ajaran', $tahunAjaran)
@@ -150,10 +171,16 @@ class JadwalReminderCommand extends Command
                 'u.id as guru_user_id',
                 'g.nama as nama_guru',
                 'm.nama_mapel',
-                'k.nama_kelas',
+                'k.tingkat',
+                'j.nama_jurusan',
+                'k.golongan',
                 'jp.jam_ke',
             )
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->nama_kelas = $item->tingkat . ' ' . $item->nama_jurusan . ' ' . $item->golongan;
+                return $item;
+            });
     }
 
     private function getWaktuMulai(string $tahunAjaran, string $semester): ?Carbon
@@ -163,7 +190,16 @@ class JadwalReminderCommand extends Command
             ->where('semester', $semester)
             ->value('waktu_mulai');
 
-        return $setting ? Carbon::createFromFormat('H:i', $setting) : Carbon::createFromFormat('H:i', '07:00');
+        if (!$setting) {
+            return Carbon::createFromTimeString('07:00');
+        }
+
+        try {
+            return Carbon::createFromTimeString((string) $setting);
+        } catch (\Throwable $e) {
+            $this->warn("Format waktu_mulai tidak valid: {$setting}. Pakai default 07:00.");
+            return Carbon::createFromTimeString('07:00');
+        }
     }
 
     private function getDurasiJam(string $tahunAjaran, string $semester): int
@@ -192,7 +228,8 @@ class JadwalReminderCommand extends Command
 
     private function carbonDayToHari(int $dayOfWeek): ?string
     {
-        return array_search($dayOfWeek, self::HARI_MAP) ?: null;
+        $hari = array_search($dayOfWeek, self::HARI_MAP, true);
+        return $hari === false ? null : $hari;
     }
 
     private function getTahunAjaran(Carbon $now): string
