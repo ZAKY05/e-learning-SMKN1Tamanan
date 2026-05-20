@@ -35,9 +35,21 @@
                                  class="feather-chevron-right"></i></span>
                      </a>
                      <ul class="nxl-submenu">
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('admin.siswa.index') }}">Rekap Presensi</a></li>
-                         <li class="nxl-item"><a class="nxl-link" href="reports-leads.html">Rekap Nilai</a></li>
-                         <li class="nxl-item"><a class="nxl-link" href="reports-project.html">Rekap UTS & UAS</a></li>
+                         <li class="nxl-item">
+                             <a class="nxl-link" href="{{ route('guru.rekap.absensi') }}">
+                                 <i class="feather-calendar me-2"></i> Rekap Absensi
+                             </a>
+                         </li>
+                         <li class="nxl-item">
+                             <a class="nxl-link" href="{{ route('guru.rekap.nilai') }}">
+                                 <i class="feather-award me-2"></i> Rekap Nilai
+                             </a>
+                         </li>
+                         <li class="nxl-item">
+                             <a class="nxl-link" href="{{ route('guru.rekap.uts_uas') }}">
+                                 <i class="feather-file-text me-2"></i> Rekap UTS & UAS
+                             </a>
+                         </li>
                      </ul>
                  </li>
 
@@ -49,11 +61,13 @@
                                  class="feather-chevron-right"></i></span>
                      </a>
                      <ul class="nxl-submenu">
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.tugas.index') }}">Pengumpulan Tugas</a>
+                         <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.tugas.index') }}">Pengumpulan
+                                 Tugas</a>
                          </li>
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.materi.index') }}">Upload Materi</a>
+                         <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.materi.index') }}">Upload
+                                 Materi</a>
                          </li>
-                        
+
                      </ul>
                  </li>
                  <li class="nxl-item nxl-hasmenu mt-2">
@@ -63,17 +77,18 @@
                                  class="feather-chevron-right"></i></span>
                      </a>
                      <ul class="nxl-submenu">
-                         </li>
-                         <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.kuis.index') }}">Manajemen Kuis / Ujian</a></li>
-                     </ul>
-                     
                  </li>
-                 <li class="nxl-item">
-                     <a href="{{ route('guru.bank-lokasi-guru.index') }}" class="nxl-link">
-                         <span class="nxl-micon"><i class="fa-solid fa-map-location-dot"></i></span>
-                         <span class="nxl-mtext">Bank-Lokasi</span>
-                     </a>
-                 </li>
+                 <li class="nxl-item"><a class="nxl-link" href="{{ route('guru.kuis.index') }}">Manajemen Kuis /
+                         Ujian</a></li>
+             </ul>
+
+             </li>
+             <li class="nxl-item">
+                 <a href="{{ route('guru.bank-lokasi-guru.index') }}" class="nxl-link">
+                     <span class="nxl-micon"><i class="fa-solid fa-map-location-dot"></i></span>
+                     <span class="nxl-mtext">Bank-Lokasi</span>
+                 </a>
+             </li>
              </ul>
          </div>
      </div>
