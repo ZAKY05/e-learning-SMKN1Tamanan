@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\FcmService;
+use App\Models\Mapel;
 use App\Models\Presensi;
 use App\Models\DetailPresensi;
 use App\Models\Student;
@@ -107,6 +109,24 @@ class PresensiGuruController extends Controller
             'keterangan' => $request->keterangan,
             'status' => 'aktif',
         ]);
+        $presensi = Presensi::latest()->first(); // Ambil presensi yang baru saja dibuat
+        [$kelas_id, $mapel_id] = explode('-', $request->kelas_mapel);
+        $mapel = \App\Models\Mapel::find($mapel_id);
+        $siswaIds = \App\Models\Student::with('user')
+            ->where('kelas_id', $kelas_id)
+            ->get()
+            ->map(fn($siswa) => $siswa->user?->id)
+            ->filter()
+            ->values()
+            ->toArray();
+
+        FcmService::kirimKeBanyakUser(
+            $siswaIds,
+            'presensi',
+            'Presensi Dibuka',
+            'Guru membuka presensi untuk ' . ($mapel->nama_mapel ?? '') . ' - Hari ini',
+            ['presensi_id' => (string)$presensi->id_presensi]
+        );
 
         return redirect()->route('guru.presensi.index')->with('success', 'Presensi berhasil dibuka.');
     }
