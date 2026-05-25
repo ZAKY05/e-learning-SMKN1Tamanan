@@ -19,13 +19,11 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
-    {
-        // Force HTTPS saat menggunakan ngrok atau reverse proxy
-        if (str_starts_with(config('app.url'), 'https')) {
-            URL::forceScheme('https');
-        }
-
-        // Register Observers
-        \App\Models\Presensi::observe(\App\Observers\PresensiObserver::class);
+{
+    if ($this->app->environment('production')) {
+        URL::forceScheme('https');
     }
+
+    \App\Models\Presensi::observe(\App\Observers\PresensiObserver::class);
+}
 }
