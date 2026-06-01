@@ -16,7 +16,7 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body p-3">
                         <form method="GET" action="{{ route('guru.rekap.nilai') }}" class="row g-3 align-items-end">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold fs-12 text-muted">Pilih Kelas</label>
                                 <select name="kelas_id" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Semua Kelas --</option>
@@ -29,7 +29,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold fs-12 text-muted">Mata Pelajaran</label>
                                 <select name="mapel_id" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Pilih Mapel --</option>
@@ -41,30 +41,7 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold fs-12 text-muted">Semester</label>
-                                <select name="semester" class="form-select" onchange="this.form.submit()">
-                                    <option value="ganjil"
-                                        {{ request('semester', 'ganjil') == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                    <option value="genap"
-                                        {{ request('semester', 'ganjil') == 'genap' ? 'selected' : '' }}>Genap</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold fs-12 text-muted">Tahun Ajaran</label>
-                                <select name="tahun_ajaran" class="form-select" onchange="this.form.submit()">
-                                    <option value="2023/2024"
-                                        {{ request('tahun_ajaran', '2024/2025') == '2023/2024' ? 'selected' : '' }}>
-                                        2023/2024</option>
-                                    <option value="2024/2025"
-                                        {{ request('tahun_ajaran', '2024/2025') == '2024/2025' ? 'selected' : '' }}>
-                                        2024/2025</option>
-                                    <option value="2025/2026"
-                                        {{ request('tahun_ajaran', '2024/2025') == '2025/2026' ? 'selected' : '' }}>
-                                        2025/2026</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold fs-12 text-muted">&nbsp;</label>
                                 <div>
                                     <a href="{{ route('guru.rekap.nilai') }}" class="btn btn-light w-100">
@@ -117,9 +94,9 @@
                             <h5 class="card-title mb-0">
                                 <i class="feather-award me-2 text-primary"></i> Rekap Nilai Per Siswa
                             </h5>
-                            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
-                                <i class="feather-printer me-1"></i> Print
-                            </button>
+                            <a href="{{ route('guru.rekap.nilai.export', request()->query()) }}" class="btn btn-sm btn-success">
+                                <i class="feather-download me-1"></i> Export Excel
+                            </a>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">

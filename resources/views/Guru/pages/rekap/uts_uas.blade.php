@@ -1,11 +1,20 @@
 {{-- resources/views/guru/rekap/uts_uas.blade.php --}}
 @extends('Guru.layout.master')
 
-@section('page_title', 'Rekap ' . strtoupper($jenis))
+@php
+    $jenisLabels = [
+        'kuis_harian' => 'Kuis Harian',
+        'uts' => 'UTS',
+        'uas' => 'UAS',
+    ];
+    $jenisLabel = $jenisLabels[$jenis] ?? strtoupper($jenis);
+@endphp
+
+@section('page_title', 'Rekap ' . $jenisLabel)
 
 @section('breadcrumb')
     <li class="breadcrumb-item">Rekap</li>
-    <li class="breadcrumb-item active">{{ strtoupper($jenis) }}</li>
+    <li class="breadcrumb-item active">{{ $jenisLabel }}</li>
 @endsection
 
 @section('content')
@@ -41,35 +50,21 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold fs-12 text-muted">Jenis</label>
                                 <select name="jenis" class="form-select" onchange="this.form.submit()">
+                                    <option value="kuis_harian" {{ $jenis == 'kuis_harian' ? 'selected' : '' }}>Kuis Harian</option>
                                     <option value="uts" {{ $jenis == 'uts' ? 'selected' : '' }}>UTS</option>
                                     <option value="uas" {{ $jenis == 'uas' ? 'selected' : '' }}>UAS</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold fs-12 text-muted">Semester</label>
-                                <select name="semester" class="form-select" onchange="this.form.submit()">
-                                    <option value="ganjil"
-                                        {{ request('semester', 'ganjil') == 'ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                    <option value="genap"
-                                        {{ request('semester', 'ganjil') == 'genap' ? 'selected' : '' }}>Genap</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label fw-semibold fs-12 text-muted">Tahun Ajaran</label>
-                                <select name="tahun_ajaran" class="form-select" onchange="this.form.submit()">
-                                    <option value="2023/2024"
-                                        {{ request('tahun_ajaran', '2024/2025') == '2023/2024' ? 'selected' : '' }}>
-                                        2023/2024</option>
-                                    <option value="2024/2025"
-                                        {{ request('tahun_ajaran', '2024/2025') == '2024/2025' ? 'selected' : '' }}>
-                                        2024/2025</option>
-                                    <option value="2025/2026"
-                                        {{ request('tahun_ajaran', '2024/2025') == '2025/2026' ? 'selected' : '' }}>
-                                        2025/2026</option>
-                                </select>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold fs-12 text-muted">&nbsp;</label>
+                                <div>
+                                    <a href="{{ route('guru.rekap.uts_uas') }}" class="btn btn-light w-100">
+                                        <i class="feather-refresh-ccw me-1"></i> Reset
+                                    </a>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -108,16 +103,16 @@
                         </div>
                     </div>
 
-                    {{-- Tabel Rekap UTS/UAS --}}
+                    {{-- Tabel Rekap --}}
                     <div class="card stretch stretch-full">
                         <div class="card-header">
                             <h5 class="card-title mb-0">
-                                <i class="feather-file-text me-2 text-primary"></i> Daftar Nilai {{ strtoupper($jenis) }}
+                                <i class="feather-file-text me-2 text-primary"></i> Daftar Nilai {{ $jenisLabel }}
                                 Per Siswa
                             </h5>
-                            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
-                                <i class="feather-printer me-1"></i> Print
-                            </button>
+                            <a href="{{ route('guru.rekap.uts_uas.export', request()->query()) }}" class="btn btn-sm btn-success">
+                                <i class="feather-download me-1"></i> Export Excel
+                            </a>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -171,7 +166,7 @@
                                             <tr>
                                                 <td colspan="6" class="text-center text-muted py-4">
                                                     <i class="feather-inbox d-block mb-2 fs-20"></i>
-                                                    Belum ada data {{ strtoupper($jenis) }}
+                                                    Belum ada data {{ $jenisLabel }}
                                                 </td>
                                             </tr>
                                         @endforelse

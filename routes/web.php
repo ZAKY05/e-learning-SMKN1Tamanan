@@ -164,8 +164,11 @@ Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     // Rekap
     Route::prefix('rekap')->name('rekap.')->group(function () {
         Route::get('/absensi', [\App\Http\Controllers\Guru\RekapAbsensiController::class, 'index'])->name('absensi');
+        Route::get('/absensi/export', [\App\Http\Controllers\Guru\RekapAbsensiController::class, 'exportExcel'])->name('absensi.export');
         Route::get('/nilai', [\App\Http\Controllers\Guru\RekapNilaiController::class, 'index'])->name('nilai');
+        Route::get('/nilai/export', [\App\Http\Controllers\Guru\RekapNilaiController::class, 'exportExcel'])->name('nilai.export');
         Route::get('/uts-uas', [\App\Http\Controllers\Guru\RekapUtsUasController::class, 'index'])->name('uts_uas');
+        Route::get('/uts-uas/export', [\App\Http\Controllers\Guru\RekapUtsUasController::class, 'exportExcel'])->name('uts_uas.export');
     });
 });   
 
