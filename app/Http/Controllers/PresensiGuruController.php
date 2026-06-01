@@ -8,7 +8,7 @@ use App\Models\Presensi;
 use App\Models\DetailPresensi;
 use App\Models\Student;
 use App\Models\JadwalPelajaran;
-use App\Models\Banklokasi;
+use App\Models\BankLokasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -45,7 +45,7 @@ class PresensiGuruController extends Controller
         }
 
         // Ambil data bank lokasi
-        $lokasi = Banklokasi::all();
+        $lokasi = BankLokasi::all();
 
         // Ambil presensi hari ini
         $presensiHariIni = Presensi::where('guru_id', $guru->id_guru)

@@ -4,16 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class BanklokasiController extends Controller
+class BankLokasiController extends Controller
 {
     public function index()
     {
-        $banklokasis = \App\Models\Banklokasi::orderBy('nama_lokasi')->get();
+        $banklokasis = \App\Models\BankLokasi::orderBy('nama_lokasi')->get();
         return view('Admin.pages.bank_lokasi', compact('banklokasis'));
     }
     public function index_guru()
     {
-        $banklokasis = \App\Models\Banklokasi::orderBy('nama_lokasi')->get();
+        $banklokasis = \App\Models\BankLokasi::orderBy('nama_lokasi')->get();
         return view('Guru.pages.bank-lokasi', compact('banklokasis'));
     }
 
@@ -28,13 +28,13 @@ class BanklokasiController extends Controller
         ]);
         $data = $request->only(['nama_lokasi', 'latitude', 'longitude', 'radius', 'alamat']);
 
-        \App\Models\Banklokasi::create($data);
+        \App\Models\BankLokasi::create($data);
 
         return redirect()->route('admin.bank-lokasi.index')->with('success', 'Data bank lokasi berhasil ditambahkan.');
     }
     public function update(Request $request, $id)
     {
-        $banklokasi = \App\Models\Banklokasi::findOrFail($id);
+        $banklokasi = \App\Models\BankLokasi::findOrFail($id);
 
         $request->validate([
             'nama_lokasi' => 'required|string|max:100',
@@ -51,7 +51,7 @@ class BanklokasiController extends Controller
     }
     public function destroy($id)
     {
-        $banklokasi = \App\Models\Banklokasi::findOrFail($id);
+        $banklokasi = \App\Models\BankLokasi::findOrFail($id);
         $banklokasi->delete();
 
         return redirect()->route('admin.bank-lokasi.index')->with('success', 'Data bank lokasi berhasil dihapus.');

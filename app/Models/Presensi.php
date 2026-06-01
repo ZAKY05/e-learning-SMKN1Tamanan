@@ -42,7 +42,7 @@ class Presensi extends Model
 
     public function lokasi()
     {
-        return $this->belongsTo(Banklokasi::class, 'lokasi_id', 'id');
+        return $this->belongsTo(BankLokasi::class, 'lokasi_id', 'id');
     }
 
     public function detailPresensi()

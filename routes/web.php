@@ -124,10 +124,10 @@ Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     // Bank-lokasi guru (Sekarang ada di dalam grup 'guru.')
     // URL akan menjadi: /guru/bank-lokasi
     // Nama rute akan menjadi: guru.bank-lokasi-guru.index
-    Route::get('/bank-lokasi', [BanklokasiController::class, 'index_guru'])->name('bank-lokasi-guru.index');
-    Route::post('/bank-lokasi', [BanklokasiController::class, 'store'])->name('bank-lokasi-guru.store');
-    Route::put('/bank-lokasi/{id}', [BanklokasiController::class, 'update'])->name('bank-lokasi-guru.update');
-    Route::delete('/bank-lokasi/{id}', [BanklokasiController::class, 'destroy'])->name('bank-lokasi-guru.destroy');
+    Route::get('/bank-lokasi', [BankLokasiController::class, 'index_guru'])->name('bank-lokasi-guru.index');
+    Route::post('/bank-lokasi', [BankLokasiController::class, 'store'])->name('bank-lokasi-guru.store');
+    Route::put('/bank-lokasi/{id}', [BankLokasiController::class, 'update'])->name('bank-lokasi-guru.update');
+    Route::delete('/bank-lokasi/{id}', [BankLokasiController::class, 'destroy'])->name('bank-lokasi-guru.destroy');
 
     // Upload Materi
     Route::get('/materi', [MateriController::class, 'index'])->name('materi.index');
