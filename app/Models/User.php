@@ -25,6 +25,7 @@ class User extends Authenticatable
         'role',
         'guru_id',
         'siswa_id',
+        'fcm_token',
     ];
 
     /**
@@ -76,5 +77,31 @@ class User extends Authenticatable
     public function isSiswa()
     {
         return $this->role === 'siswa';
+    }
+
+    /**
+     * Get the user's profile photo path.
+     */
+    public function getFotoProfilAttribute()
+    {
+        if ($this->isGuru()) {
+            return $this->guru?->foto_profil;
+        }
+        if ($this->isSiswa()) {
+            return $this->siswa?->foto_profil;
+        }
+        return null;
+    }
+
+    /**
+     * Get the user's avatar URL.
+     */
+    public function getAvatarUrlAttribute()
+    {
+        $fotoPath = $this->foto_profil;
+        if ($fotoPath && file_exists(public_path($fotoPath))) {
+            return asset($fotoPath);
+        }
+        return asset('Template/assets/images/avatar/1.png');
     }
 }

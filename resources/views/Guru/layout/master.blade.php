@@ -25,6 +25,9 @@
     <!--! BEGIN: Custom CSS-->
     <link rel="stylesheet" type="text/css" href="{{ asset('Template/assets/css/theme.min.css') }}" />
     <!--! END: Custom CSS-->
+    <!--! BEGIN: Stack Styles -->
+    @stack('styles')
+    <!--! END: Stack Styles -->
     <!--! HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries !-->
     <!--! WARNING: Respond.js doesn"t work if you view the page via file: !-->
     <!--[if lt IE 9]>
@@ -61,7 +64,11 @@
                         <h5 class="m-b-10">@yield('page_title', 'Dashboard')</h5>
                     </div>
                     <ul class="breadcrumb">
-                        @yield('breadcrumb', '<li class="breadcrumb-item">Dashboard</li>')
+                        @hasSection('breadcrumb')
+                            @yield('breadcrumb')
+                        @else
+                            <li class="breadcrumb-item">Dashboard</li>
+                        @endif
                     </ul>
                 </div>
                 <div class="page-header-right ms-auto">

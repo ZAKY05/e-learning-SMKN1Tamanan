@@ -13,7 +13,6 @@ class PresensiApiController extends Controller
 {
     /**
      * GET /api/presensi/active
-     * Cek apakah ada presensi aktif untuk kelas siswa saat ini
      */
     public function activePresensi(Request $request)
     {
@@ -29,10 +28,18 @@ class PresensiApiController extends Controller
 
         $now = Carbon::now();
 
-        // Cari presensi aktif hari ini untuk kelas siswa
         $presensiAktif = Presensi::where('kelas_id', $siswa->kelas_id)
-            ->where('status', 'aktif')
             ->whereDate('tanggal', $now->toDateString())
+            ->where(function ($q) use ($now) {
+                $q->where('status', 'aktif')
+                  ->orWhere(function ($q2) use ($now) {
+                      $q2->where('status', 'selesai')
+                         ->whereRaw(
+                             "ADDTIME(CONCAT(tanggal, ' ', jam_selesai), '00:30:00') > ?",
+                             [$now->toDateTimeString()]
+                         );
+                  });
+            })
             ->with(['mapel', 'guru', 'lokasi', 'kelas.jurusan'])
             ->orderBy('jam_mulai', 'desc')
             ->get();
@@ -43,47 +50,41 @@ class PresensiApiController extends Controller
             $jamSelesai = Carbon::parse($presensi->tanggal . ' ' . $presensi->jam_selesai);
             $batasTerlambat = $jamSelesai->copy()->addMinutes(30);
 
-            // Tentukan fase waktu
             if ($now->lte($jamSelesai)) {
                 $faseWaktu = 'normal';
             } elseif ($now->lte($batasTerlambat)) {
                 $faseWaktu = 'terlambat';
             } else {
-                // Sudah expired, skip
                 continue;
             }
 
-            // Cek apakah siswa sudah absen
             $sudahAbsen = DetailPresensi::where('presensi_id', $presensi->id_presensi)
                 ->where('siswa_id', $siswa->id_siswa)
                 ->first();
 
             $result[] = [
-            'id_presensi' => $presensi->id_presensi,
-            'mapel' => $presensi->mapel->nama_mapel ?? '-',
-            'guru' => $presensi->guru->nama ?? '-',
-            'kelas' => $presensi->kelas->nama_kelas ?? '-',
-
-            // TAMBAHAN INI
-            'qr_code' => $presensi->qr_code,
-
-            'lokasi' => [
-                'nama' => $presensi->lokasi->nama_lokasi ?? '-',
-                'latitude' => $presensi->lokasi->latitude ?? null,
-                'longitude' => $presensi->lokasi->longitude ?? null,
-                'radius' => $presensi->lokasi->radius ?? null,
-            ],
-            'jam_mulai' => $presensi->jam_mulai,
-            'jam_selesai' => $presensi->jam_selesai,
-            'batas_terlambat' => $batasTerlambat->format('H:i:s'),
-            'fase_waktu' => $faseWaktu,
-            'sisa_waktu_menit' => $faseWaktu === 'terlambat'
-                ? $now->diffInMinutes($batasTerlambat)
-                : $now->diffInMinutes($jamSelesai),
-                'sudah_absen' => $sudahAbsen ? true : false,
-                'status_kehadiran' => $sudahAbsen ? $sudahAbsen->status_kehadiran : null,
-                'waktu_presensi' => $sudahAbsen ? $sudahAbsen->waktu_presensi : null,
-                'keterangan' => $presensi->keterangan,
+                'id_presensi'      => $presensi->id_presensi,
+                'mapel'            => $presensi->mapel->nama_mapel ?? '-',
+                'guru'             => $presensi->guru->nama ?? '-',
+                'kelas'            => $presensi->kelas->nama_kelas ?? '-',
+                'qr_code'          => $presensi->qr_code,
+                'lokasi'           => [
+                    'nama'      => $presensi->lokasi->nama_lokasi ?? '-',
+                    'latitude'  => $presensi->lokasi->latitude ?? null,
+                    'longitude' => $presensi->lokasi->longitude ?? null,
+                    'radius'    => $presensi->lokasi->radius ?? null,
+                ],
+                'jam_mulai'        => $presensi->jam_mulai,
+                'jam_selesai'      => $presensi->jam_selesai,
+                'batas_terlambat'  => $batasTerlambat->format('H:i:s'),
+                'fase_waktu'       => $faseWaktu,
+                'sisa_waktu_menit' => $faseWaktu === 'terlambat'
+                    ? $now->diffInMinutes($batasTerlambat)
+                    : $now->diffInMinutes($jamSelesai),
+                'sudah_absen'      => $sudahAbsen ? true : false,
+                'status_kehadiran' => $sudahAbsen?->status_kehadiran,
+                'waktu_presensi'   => $sudahAbsen?->waktu_presensi,
+                'keterangan'       => $presensi->keterangan,
             ];
         }
 
@@ -98,23 +99,16 @@ class PresensiApiController extends Controller
 
     /**
      * POST /api/presensi/scan
-     * Siswa scan QR code untuk melakukan presensi
-     *
-     * Body: {
-     *   "qr_code": "string",
-     *   "latitude": "string",
-     *   "longitude": "string"
-     * }
      */
     public function scanQr(Request $request)
     {
         $request->validate([
-            'qr_code' => 'required|string',
-            'latitude' => 'nullable|string',
+            'qr_code'   => 'required|string',
+            'latitude'  => 'nullable|string',
             'longitude' => 'nullable|string',
         ]);
 
-        $user = $request->user();
+        $user  = $request->user();
         $siswa = $user->siswa;
 
         if (!$siswa) {
@@ -124,9 +118,20 @@ class PresensiApiController extends Controller
             ], 403);
         }
 
-        // Cari presensi berdasarkan QR code
+        $now = Carbon::now();
+
+        // Cari presensi: aktif ATAU selesai tapi masih dalam toleransi 30 menit
         $presensi = Presensi::where('qr_code', $request->qr_code)
-            ->where('status', 'aktif')
+            ->where(function ($q) use ($now) {
+                $q->where('status', 'aktif')
+                  ->orWhere(function ($q2) use ($now) {
+                      $q2->where('status', 'selesai')
+                         ->whereRaw(
+                             "ADDTIME(CONCAT(tanggal, ' ', jam_selesai), '00:30:00') > ?",
+                             [$now->toDateTimeString()]
+                         );
+                  });
+            })
             ->with(['lokasi', 'mapel', 'kelas.jurusan'])
             ->first();
 
@@ -154,17 +159,16 @@ class PresensiApiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Anda sudah melakukan presensi untuk sesi ini',
-                'data' => [
+                'data'    => [
                     'status_kehadiran' => $existing->status_kehadiran,
-                    'waktu_presensi' => $existing->waktu_presensi,
+                    'waktu_presensi'   => $existing->waktu_presensi,
                 ],
             ], 409);
         }
 
-        // Cek waktu presensi
-        $now = Carbon::now();
-        $jamSelesai = Carbon::parse($presensi->tanggal . ' ' . $presensi->jam_selesai);
-        $batasTerlambat = $jamSelesai->copy()->addMinutes(30);
+        // Cek waktu
+        $jamSelesai      = Carbon::parse($presensi->tanggal . ' ' . $presensi->jam_selesai);
+        $batasTerlambat  = $jamSelesai->copy()->addMinutes(30);
 
         if ($now->gt($batasTerlambat)) {
             return response()->json([
@@ -173,10 +177,9 @@ class PresensiApiController extends Controller
             ], 422);
         }
 
-        // Tentukan status: hadir atau terlambat
         $statusKehadiran = $now->lte($jamSelesai) ? 'hadir' : 'terlambat';
 
-        // Hitung jarak jika lokasi disediakan
+        // Hitung jarak
         $jarakMeter = null;
         if ($request->latitude && $request->longitude && $presensi->lokasi) {
             $jarakMeter = $this->hitungJarak(
@@ -186,29 +189,29 @@ class PresensiApiController extends Controller
                 $presensi->lokasi->longitude
             );
 
-            // Validasi radius jika lokasi punya radius
             if ($presensi->lokasi->radius && $jarakMeter > $presensi->lokasi->radius) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Anda berada di luar jangkauan lokasi presensi. Jarak Anda: ' . round($jarakMeter) . ' meter (maksimal: ' . $presensi->lokasi->radius . ' meter)',
+                    'message' => 'Anda berada di luar jangkauan lokasi presensi. Jarak Anda: '
+                        . round($jarakMeter) . ' meter (maksimal: ' . $presensi->lokasi->radius . ' meter)',
                     'data' => [
-                        'jarak_meter' => round($jarakMeter, 2),
+                        'jarak_meter'     => round($jarakMeter, 2),
                         'radius_maksimal' => $presensi->lokasi->radius,
                     ],
                 ], 422);
             }
         }
 
-        // Simpan presensi
+        // Simpan
         $detail = DetailPresensi::create([
-            'presensi_id' => $presensi->id_presensi,
-            'siswa_id' => $siswa->id_siswa,
-            'waktu_presensi' => $now->format('H:i:s'),
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'jarak_meter' => $jarakMeter ? round($jarakMeter, 2) : null,
+            'presensi_id'      => $presensi->id_presensi,
+            'siswa_id'         => $siswa->id_siswa,
+            'waktu_presensi'   => $now->format('H:i:s'),
+            'latitude'         => $request->latitude,
+            'longitude'        => $request->longitude,
+            'jarak_meter'      => $jarakMeter ? round($jarakMeter, 2) : null,
             'status_kehadiran' => $statusKehadiran,
-            'keterangan' => null,
+            'keterangan'       => null,
         ]);
 
         return response()->json([
@@ -218,21 +221,20 @@ class PresensiApiController extends Controller
                 : 'Presensi berhasil! Status: Terlambat (melewati batas waktu)',
             'data' => [
                 'status_kehadiran' => $statusKehadiran,
-                'waktu_presensi' => $detail->waktu_presensi,
-                'jarak_meter' => $detail->jarak_meter,
-                'mapel' => $presensi->mapel->nama_mapel ?? '-',
-                'kelas' => $presensi->kelas->nama_kelas ?? '-',
+                'waktu_presensi'   => $detail->waktu_presensi,
+                'jarak_meter'      => $detail->jarak_meter,
+                'mapel'            => $presensi->mapel->nama_mapel ?? '-',
+                'kelas'            => $presensi->kelas->nama_kelas ?? '-',
             ],
         ]);
     }
 
     /**
      * GET /api/presensi/riwayat
-     * Riwayat presensi siswa (opsional filter: ?tanggal_mulai=&tanggal_selesai=&mapel_id=)
      */
     public function riwayat(Request $request)
     {
-        $user = $request->user();
+        $user  = $request->user();
         $siswa = $user->siswa;
 
         if (!$siswa) {
@@ -246,14 +248,15 @@ class PresensiApiController extends Controller
             ->with(['presensi.mapel', 'presensi.guru', 'presensi.kelas.jurusan'])
             ->orderBy('created_at', 'desc');
 
-        // Filter tanggal
         if ($request->tanggal_mulai && $request->tanggal_selesai) {
             $query->whereHas('presensi', function ($q) use ($request) {
-                $q->whereBetween('tanggal', [$request->tanggal_mulai, $request->tanggal_selesai]);
+                $q->whereBetween('tanggal', [
+                    $request->tanggal_mulai,
+                    $request->tanggal_selesai,
+                ]);
             });
         }
 
-        // Filter mapel
         if ($request->mapel_id) {
             $query->whereHas('presensi', function ($q) use ($request) {
                 $q->where('mapel_id', $request->mapel_id);
@@ -264,39 +267,38 @@ class PresensiApiController extends Controller
 
         $data = $riwayat->getCollection()->map(function ($detail) {
             return [
-                'id_detail' => $detail->id_detail,
-                'tanggal' => $detail->presensi->tanggal ?? null,
-                'mapel' => $detail->presensi->mapel->nama_mapel ?? '-',
-                'guru' => $detail->presensi->guru->nama ?? '-',
-                'kelas' => $detail->presensi->kelas->nama_kelas ?? '-',
-                'jam_mulai' => $detail->presensi->jam_mulai ?? null,
-                'jam_selesai' => $detail->presensi->jam_selesai ?? null,
-                'waktu_presensi' => $detail->waktu_presensi,
+                'id_detail'        => $detail->id_detail,
+                'tanggal'          => $detail->presensi->tanggal ?? null,
+                'mapel'            => $detail->presensi->mapel->nama_mapel ?? '-',
+                'guru'             => $detail->presensi->guru->nama ?? '-',
+                'kelas'            => $detail->presensi->kelas->nama_kelas ?? '-',
+                'jam_mulai'        => $detail->presensi->jam_mulai ?? null,
+                'jam_selesai'      => $detail->presensi->jam_selesai ?? null,
+                'waktu_presensi'   => $detail->waktu_presensi,
                 'status_kehadiran' => $detail->status_kehadiran,
-                'jarak_meter' => $detail->jarak_meter,
-                'keterangan' => $detail->keterangan,
+                'jarak_meter'      => $detail->jarak_meter,
+                'keterangan'       => $detail->keterangan,
             ];
         });
 
         return response()->json([
-            'success' => true,
-            'data' => $data,
+            'success'    => true,
+            'data'       => $data,
             'pagination' => [
                 'current_page' => $riwayat->currentPage(),
-                'last_page' => $riwayat->lastPage(),
-                'per_page' => $riwayat->perPage(),
-                'total' => $riwayat->total(),
+                'last_page'    => $riwayat->lastPage(),
+                'per_page'     => $riwayat->perPage(),
+                'total'        => $riwayat->total(),
             ],
         ]);
     }
 
     /**
      * GET /api/presensi/rekap
-     * Rekap statistik presensi siswa
      */
     public function rekap(Request $request)
     {
-        $user = $request->user();
+        $user  = $request->user();
         $siswa = $user->siswa;
 
         if (!$siswa) {
@@ -308,7 +310,6 @@ class PresensiApiController extends Controller
 
         $query = DetailPresensi::where('siswa_id', $siswa->id_siswa);
 
-        // Filter bulan/tahun
         if ($request->bulan && $request->tahun) {
             $query->whereHas('presensi', function ($q) use ($request) {
                 $q->whereMonth('tanggal', $request->bulan)
@@ -316,12 +317,12 @@ class PresensiApiController extends Controller
             });
         }
 
-        $total = (clone $query)->count();
-        $hadir = (clone $query)->where('status_kehadiran', 'hadir')->count();
+        $total     = (clone $query)->count();
+        $hadir     = (clone $query)->where('status_kehadiran', 'hadir')->count();
         $terlambat = (clone $query)->where('status_kehadiran', 'terlambat')->count();
-        $sakit = (clone $query)->where('status_kehadiran', 'sakit')->count();
-        $izin = (clone $query)->where('status_kehadiran', 'izin')->count();
-        $alpha = (clone $query)->where('status_kehadiran', 'alpha')->count();
+        $sakit     = (clone $query)->where('status_kehadiran', 'sakit')->count();
+        $izin      = (clone $query)->where('status_kehadiran', 'izin')->count();
+        $alpha     = (clone $query)->where('status_kehadiran', 'alpha')->count();
 
         $persentaseKehadiran = $total > 0
             ? round((($hadir + $terlambat) / $total) * 100, 1)
@@ -329,13 +330,13 @@ class PresensiApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'total' => $total,
-                'hadir' => $hadir,
-                'terlambat' => $terlambat,
-                'sakit' => $sakit,
-                'izin' => $izin,
-                'alpha' => $alpha,
+            'data'    => [
+                'total'                => $total,
+                'hadir'                => $hadir,
+                'terlambat'            => $terlambat,
+                'sakit'                => $sakit,
+                'izin'                 => $izin,
+                'alpha'                => $alpha,
                 'persentase_kehadiran' => $persentaseKehadiran,
             ],
         ]);
@@ -343,11 +344,10 @@ class PresensiApiController extends Controller
 
     /**
      * Hitung jarak antara 2 koordinat (Haversine formula)
-     * Return: jarak dalam meter
      */
     private function hitungJarak($lat1, $lon1, $lat2, $lon2)
     {
-        $earthRadius = 6371000; // meter
+        $earthRadius = 6371000;
 
         $lat1 = deg2rad(floatval($lat1));
         $lon1 = deg2rad(floatval($lon1));

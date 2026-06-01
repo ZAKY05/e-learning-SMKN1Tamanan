@@ -310,15 +310,15 @@ class JadwalGuruApiController extends Controller
             $selisih = $now->diffInMinutes($waktuMulai, false); // positif = belum mulai
 
             // Notif 15 menit sebelum dan 5 menit sebelum
-            if ($selisih > 0 && $selisih <= 15) {
+            if ($selisih > 0 && $selisih <= 60) {
                 $notifikasi[] = [
-                    'tipe' => $selisih <= 5 ? 'segera' : 'persiapan',
+                    'tipe' => $selisih <= 15 ? 'segera' : 'persiapan',
                     'menit_menuju' => $selisih,
                     'waktu_mulai' => $jadwal['waktu_mulai'],
                     'waktu_selesai' => $jadwal['waktu_selesai'],
                     'mapel' => $jadwal['mapel'],
                     'kelas' => $jadwal['kelas'],
-                    'message' => $selisih <= 5
+                    'message' => $selisih <= 15
                         ? "⏰ {$jadwal['mapel']} di {$jadwal['kelas']} dimulai {$selisih} menit lagi!"
                         : "📚 Persiapan: {$jadwal['mapel']} di {$jadwal['kelas']} dimulai {$selisih} menit lagi (pukul {$jadwal['waktu_mulai']})",
                 ];

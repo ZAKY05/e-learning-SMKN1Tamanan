@@ -37,8 +37,10 @@ class AuthController extends Controller
         if ($request->filled('fcm_token')) {
             $this->saveFcmToken($user, $request->fcm_token);
         }
+        $user->tokens()->delete(); 
+$token = $user->createToken('mobile')->plainTextToken;
 
-        $token = $user->createToken('mobile')->plainTextToken;
+
 
         // ================= BASE DATA =================
     $userData = [

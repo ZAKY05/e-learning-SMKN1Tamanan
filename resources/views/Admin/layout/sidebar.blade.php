@@ -1,11 +1,19 @@
- <nav class="nxl-navigation">
+<nav class="nxl-navigation">
      <div class="navbar-wrapper">
          <div class="m-header">
-             <a href="{{ route('admin.dashboard') }}" class="b-brand">
-                 <img src="{{ asset('img/logo-smk.png') }}" alt="" class="logo logo-lg"
-                     style="max-height: 75px; width: auto;" />
-             </a>
-         </div>
+            <a href="{{ route('admin.dashboard') }}" class="b-brand d-flex align-items-center gap-2">
+                <!-- Large Logo (visible when sidebar is expanded) -->
+                <div class="logo logo-lg d-flex align-items-center gap-2">
+                    <img src="{{ asset('img/logo-smk.png') }}" alt="Logo SMK" style="max-height: 45px; width: auto;" />
+                    <div class="d-flex flex-column justify-content-center text-start">
+                        <span class="fw-bold text-dark fs-12 lh-1 text-uppercase text-spacing-1">E-Learning</span>
+                        <span class="fw-bold text-dark fs-10 lh-1 mt-1">SMKN 1 Tamanan</span>
+                    </div>
+                </div>
+                <!-- Small Logo (visible when sidebar is collapsed) -->
+                <img src="{{ asset('img/logo-smk.png') }}" alt="Logo SMK" class="logo logo-sm" style="max-height: 40px; width: auto;" />
+            </a>
+        </div>
          <div class="navbar-content">
              <ul class="nxl-navbar">
                  <li class="nxl-item nxl-caption">

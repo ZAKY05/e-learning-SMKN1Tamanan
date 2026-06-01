@@ -61,9 +61,9 @@ class MateriController extends Controller
     }
 
     /**
-     * Halaman materi per kelas + mapel (tampilan card minggu 1-15)
+     * Halaman materi per kelas + mapel (tampilan card per minggu)
      */
-    public function show($kelasId, $mapelId)
+    public function show(Request $request, $kelasId, $mapelId)
     {
         $guru = Auth::user()->guru;
 
@@ -75,18 +75,26 @@ class MateriController extends Controller
         $mapel = Mapel::findOrFail($mapelId);
 
         // Ambil semua materi untuk kelas+mapel ini oleh guru ini
-        $materiList = Materi::with('tugas')
+        $materiAll = Materi::with('tugas')
             ->where('guru_id', $guru->id_guru)
             ->where('kelas_id', $kelasId)
             ->where('mapel_id', $mapelId)
             ->orderBy('minggu_ke')
-            ->get()
-            ->keyBy('minggu_ke');
+            ->orderBy('created_at')
+            ->get();
 
-        $mingguList = range(1, 15);
+        // Group berdasarkan minggu_ke (bisa banyak materi per minggu)
+        $materiByMinggu = $materiAll->groupBy('minggu_ke');
+
+        // Jumlah minggu: dari query param, atau max minggu yang ada, minimal 15
+        $maxMingguData = $materiAll->max('minggu_ke') ?? 0;
+        $jumlahMinggu = (int) $request->input('minggu', max($maxMingguData, 15));
+        $jumlahMinggu = max(1, min($jumlahMinggu, 30)); // clamp 1-30
+
+        $mingguList = range(1, $jumlahMinggu);
 
         return view('Guru.pages.materi-detail', compact(
-            'kelas', 'mapel', 'guru', 'materiList', 'mingguList'
+            'kelas', 'mapel', 'guru', 'materiByMinggu', 'mingguList', 'jumlahMinggu'
         ));
     }
 
@@ -98,7 +106,7 @@ class MateriController extends Controller
         $request->validate([
             'kelas_id'      => 'required|exists:kelas,id_kelas',
             'mapel_id'      => 'required|exists:mapel,id_mapel',
-            'minggu_ke'     => 'required|integer|min:1|max:15',
+            'minggu_ke'     => 'required|integer|min:1|max:30',
             'judul_materi'  => 'required|string|max:255',
             'deskripsi'     => 'nullable|string',
             'semester'      => 'required|in:ganjil,genap',
@@ -151,7 +159,7 @@ class MateriController extends Controller
 
         return redirect()
             ->route('guru.materi.show', [$request->kelas_id, $request->mapel_id])
-            ->with('success', "Materi Minggu ke-{$request->minggu_ke} berhasil ditambahkan!");
+            ->with('success', "Materi berhasil ditambahkan di Minggu ke-{$request->minggu_ke}!");
     }
 
     /**
@@ -189,7 +197,7 @@ class MateriController extends Controller
 
         return redirect()
             ->route('guru.materi.show', [$materi->kelas_id, $materi->mapel_id])
-            ->with('success', "Materi Minggu ke-{$materi->minggu_ke} berhasil diupdate!");
+            ->with('success', "Materi berhasil diupdate!");
     }
 
     /**
@@ -210,6 +218,6 @@ class MateriController extends Controller
 
         return redirect()
             ->route('guru.materi.show', [$kelasId, $mapelId])
-            ->with('success', "Materi Minggu ke-{$minggu} berhasil dihapus!");
+            ->with('success', "Materi berhasil dihapus!");
     }
 }

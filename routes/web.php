@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\GuruProfileController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\JurusanController;
@@ -36,6 +38,11 @@ Route::middleware('auth')->group(function () {
 // ============ Admin Routes ============
 Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(function () {
     Route::get('/', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // Profile
+    Route::get('/profile', [AdminProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
 
         // Data Siswa
         Route::get('/data-siswa', [SiswaController::class , 'index'])->name('siswa.index');
@@ -109,6 +116,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','admin'])->group(func
 Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     Route::get('/', [GuruDashboardController::class, 'index'])->name('dashboard');
 
+    // Profile
+    Route::get('/profile', [GuruProfileController::class, 'show'])->name('profile.show');
+    Route::put('/profile', [GuruProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [GuruProfileController::class, 'updatePassword'])->name('profile.password');
+
     // Bank-lokasi guru (Sekarang ada di dalam grup 'guru.')
     // URL akan menjadi: /guru/bank-lokasi
     // Nama rute akan menjadi: guru.bank-lokasi-guru.index
@@ -147,6 +159,13 @@ Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     Route::get('/kuis/{kuis}/hasil', [App\Http\Controllers\KuisGuruController::class, 'hasil'])->name('kuis.hasil');
     Route::get('/kuis/{kuis}/hasil/{hasil_id}', [App\Http\Controllers\KuisGuruController::class, 'review'])->name('kuis.hasil.review');
     Route::post('/kuis/hasil/nilai-essay', [App\Http\Controllers\KuisGuruController::class, 'nilaiEssay'])->name('kuis.hasil.nilai_essay');
+
+    // Rekap
+    Route::prefix('rekap')->name('rekap.')->group(function () {
+        Route::get('/absensi', [\App\Http\Controllers\Guru\RekapAbsensiController::class, 'index'])->name('absensi');
+        Route::get('/nilai', [\App\Http\Controllers\Guru\RekapNilaiController::class, 'index'])->name('nilai');
+        Route::get('/uts-uas', [\App\Http\Controllers\Guru\RekapUtsUasController::class, 'index'])->name('uts_uas');
+    });
 });   
 
 require __DIR__ . '/auth.php';

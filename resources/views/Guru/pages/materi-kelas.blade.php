@@ -58,12 +58,12 @@
                                             class="text-decoration-none">
                                             <div class="card border h-100 shadow-sm"
                                                 style="transition: all 0.2s ease; cursor:pointer;"
-                                                onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 25px rgba(91,95,199,0.15)';"
+                                                onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 25px rgba(4,108,0,0.15)';"
                                                 onmouseout="this.style.transform=''; this.style.boxShadow='';">
                                                 <div class="card-body p-3">
                                                     <div class="d-flex align-items-start gap-3">
                                                         <div class="avatar-text rounded-3"
-                                                            style="width:48px; height:48px; min-width:48px; background: linear-gradient(135deg, #5b5fc7 0%, #8b5cf6 100%); display:flex; align-items:center; justify-content:center;">
+                                                            style="width:48px; height:48px; min-width:48px; background: linear-gradient(135deg, #046C00 0%, #069e02 100%); display:flex; align-items:center; justify-content:center;">
                                                             <i class="feather-book text-white" style="font-size:1.2rem;"></i>
                                                         </div>
                                                         <div class="flex-fill">
@@ -75,12 +75,9 @@
                                                                 {{ $mapel->nama_mapel }}
                                                             </p>
                                                             <div class="d-flex align-items-center gap-2">
-                                                                <span class="badge bg-soft-primary text-primary" style="font-size:0.75rem;">
-                                                                    <i class="feather-file-text me-1"></i> {{ $materiCount }}/15 Minggu
+                                                                <span class="badge" style="font-size:0.75rem; background: rgba(4, 108, 0, 0.1); color: #046C00;">
+                                                                    <i class="feather-file-text me-1"></i> {{ $materiCount }} Materi
                                                                 </span>
-                                                                @if ($materiCount >= 15)
-                                                                    <span class="badge bg-soft-success text-success" style="font-size:0.75rem;">Lengkap</span>
-                                                                @endif
                                                             </div>
                                                         </div>
                                                         <i class="feather-chevron-right text-muted" style="font-size:1.1rem;"></i>

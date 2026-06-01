@@ -39,7 +39,7 @@
                         </h5>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
                             data-bs-target="#modalTambahLokasi" style="font-size:0.9rem; padding: 0.4rem 0.95rem;">
-                            <i class="feather-plus me-1" style="font-size:0.95rem;"></i> Tambah Akun
+                            <i class="feather-plus me-1" style="font-size:0.95rem;"></i> Tambah Lokasi
                         </button>
                     </div>
 

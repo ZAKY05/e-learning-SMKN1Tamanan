@@ -7,6 +7,35 @@
     <li class="breadcrumb-item active">{{ $kelas->nama_kelas }} - {{ $mapel->nama_mapel }}</li>
 @endsection
 
+@push('styles')
+<style>
+    .btn-primary {
+        background-color: #046C00 !important;
+        border-color: #046C00 !important;
+        color: #fff !important;
+    }
+    .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+        background-color: #035400 !important;
+        border-color: #035400 !important;
+    }
+    .text-primary {
+        color: #046C00 !important;
+    }
+    .badge.bg-primary {
+        background-color: #046C00 !important;
+    }
+    .btn-soft-primary {
+        background-color: rgba(4, 108, 0, 0.1) !important;
+        color: #046C00 !important;
+        border-color: transparent !important;
+    }
+    .btn-soft-primary:hover {
+        background-color: #046C00 !important;
+        color: #fff !important;
+    }
+</style>
+@endpush
+
 @section('content')
     <div class="main-content">
 
@@ -31,9 +60,9 @@
         {{-- Header Info --}}
         <div class="row px-4 pt-3">
             <div class="col-12">
-                <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #5b5fc7 0%, #8b5cf6 100%);">
+                <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #046C00 0%, #069e02 100%);">
                     <div class="card-body p-4 text-white">
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
                             <div class="avatar-text rounded-3"
                                 style="width:56px; height:56px; min-width:56px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
                                 <i class="feather-book text-white" style="font-size:1.5rem;"></i>
@@ -44,9 +73,25 @@
                                     <i class="feather-bookmark me-1"></i> {{ $mapel->nama_mapel }}
                                 </p>
                             </div>
-                            <div class="ms-auto text-end">
-                                <div class="fw-bold" style="font-size:1.8rem;">{{ $materiList->count() }}<span style="font-size:1rem;">/15</span></div>
-                                <small class="opacity-75">Minggu terisi</small>
+                            <div class="ms-auto d-flex align-items-center gap-3">
+                                {{-- Jumlah Minggu Setter --}}
+                                <form method="GET" action="{{ route('guru.materi.show', [$kelas->id_kelas, $mapel->id_mapel]) }}" class="d-flex align-items-center gap-2">
+                                    <label class="text-white mb-0 opacity-75" style="font-size:0.8rem; white-space:nowrap;">Jumlah Minggu:</label>
+                                    <input type="number" name="minggu" value="{{ $jumlahMinggu }}" min="1" max="30"
+                                        class="form-control form-control-sm text-center"
+                                        style="width:65px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.4); color:#fff; font-weight:bold;"
+                                        onchange="this.form.submit()">
+                                </form>
+                                <div class="text-end">
+                                    @php
+                                        $totalMateri = 0;
+                                        foreach ($materiByMinggu as $items) {
+                                            $totalMateri += $items->count();
+                                        }
+                                    @endphp
+                                    <div class="fw-bold" style="font-size:1.8rem;">{{ $totalMateri }}</div>
+                                    <small class="opacity-75">Total Materi</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -54,12 +99,12 @@
             </div>
         </div>
 
-        {{-- Cards Minggu 1-15 --}}
+        {{-- Cards per Minggu --}}
         <div class="row px-4 pt-2 g-3">
             @foreach ($mingguList as $minggu)
                 @php
-                    $materi = $materiList->get($minggu);
-                    $hasMateri = $materi !== null;
+                    $materiItems = $materiByMinggu->get($minggu, collect());
+                    $hasMateri = $materiItems->isNotEmpty();
                 @endphp
                 <div class="col-md-6 col-lg-4">
                     <div class="card border h-100 shadow-sm" style="transition: all 0.2s ease;"
@@ -78,109 +123,122 @@
                                 </div>
                                 <span class="fw-bold" style="font-size:0.9rem; color:#333;">Minggu {{ $minggu }}</span>
                             </div>
-                            @if ($hasMateri)
-                                <span class="badge bg-success" style="font-size:0.72rem;">Terisi</span>
-                            @else
-                                <span class="badge bg-warning text-dark" style="font-size:0.72rem;">Kosong</span>
-                            @endif
+                            <div class="d-flex align-items-center gap-1">
+                                @if ($hasMateri)
+                                    <span class="badge bg-success" style="font-size:0.72rem;">{{ $materiItems->count() }} Materi</span>
+                                @else
+                                    <span class="badge bg-warning text-dark" style="font-size:0.72rem;">Kosong</span>
+                                @endif
+                            </div>
                         </div>
                         <div class="card-body p-3">
                             @if ($hasMateri)
-                                <h6 class="fw-semibold mb-1" style="font-size:0.88rem;">{{ $materi->judul_materi }}</h6>
-                                @if ($materi->deskripsi)
-                                    <p class="text-muted mb-2" style="font-size:0.8rem; line-height:1.4;">
-                                        {{ Str::limit($materi->deskripsi, 80) }}
-                                    </p>
-                                @endif
-                                @if ($materi->file_name)
-                                    <div class="d-flex align-items-center gap-2 mb-2 p-2 rounded" style="background:#f5f5f5;">
-                                        <i class="feather-file text-primary" style="font-size:0.9rem;"></i>
-                                        <span style="font-size:0.78rem;" class="text-truncate">{{ $materi->file_name }}</span>
-                                        <a href="{{ asset('storage/' . $materi->file_path) }}" target="_blank"
-                                            class="ms-auto badge bg-primary text-white text-decoration-none" style="font-size:0.7rem;">
-                                            <i class="feather-download" style="font-size:0.65rem;"></i> Unduh
-                                        </a>
-                                    </div>
-                                @endif
-
-                                {{-- Tugas Section --}}
-                                @if ($materi->tugas)
-                                    <div class="mt-2 p-2 rounded border border-warning" style="background-color: #fffdf5;">
-                                        <div class="d-flex align-items-center justify-content-between mb-1">
-                                            <span class="fw-bold text-warning" style="font-size:0.8rem; color: #d97706 !important;"><i class="feather-clipboard me-1"></i>Tugas</span>
-                                            <div class="d-flex gap-2">
-                                                <button type="button" class="btn btn-sm btn-link p-0 text-warning btn-edit-tugas"
-                                                    data-bs-toggle="modal" data-bs-target="#modalEditTugas"
-                                                    data-id="{{ $materi->tugas->id_tugas }}"
-                                                    data-judul="{{ $materi->tugas->judul_tugas }}"
-                                                    data-deskripsi="{{ $materi->tugas->deskripsi }}"
-                                                    data-mulai="{{ \Carbon\Carbon::parse($materi->tugas->tanggal_mulai)->format('Y-m-d\TH:i') }}"
-                                                    data-deadline="{{ \Carbon\Carbon::parse($materi->tugas->tanggal_deadline)->format('Y-m-d\TH:i') }}"
-                                                    style="font-size:0.75rem; text-decoration: none;">
-                                                    <i class="feather-edit-2"></i>
+                                @foreach ($materiItems as $materi)
+                                    <div class="mb-3 {{ !$loop->last ? 'pb-3 border-bottom' : '' }}">
+                                        {{-- Materi Info --}}
+                                        <div class="d-flex align-items-start justify-content-between mb-1">
+                                            <h6 class="fw-semibold mb-0" style="font-size:0.88rem;">{{ $materi->judul_materi }}</h6>
+                                            <div class="d-flex gap-1 flex-shrink-0 ms-2">
+                                                <button type="button" class="btn btn-soft-warning btn-sm btn-edit-materi"
+                                                    data-bs-toggle="modal" data-bs-target="#modalEditMateri"
+                                                    data-id="{{ $materi->id_materi }}"
+                                                    data-judul="{{ $materi->judul_materi }}"
+                                                    data-deskripsi="{{ $materi->deskripsi }}"
+                                                    data-semester="{{ $materi->semester }}"
+                                                    style="font-size:0.75rem; padding:0.2rem 0.5rem;">
+                                                    <i class="feather-edit-2" style="font-size:0.75rem;"></i>
                                                 </button>
-                                                <button type="button" class="btn btn-sm btn-link p-0 text-danger btn-hapus-tugas"
-                                                    data-bs-toggle="modal" data-bs-target="#modalHapusTugas"
-                                                    data-id="{{ $materi->tugas->id_tugas }}"
-                                                    style="font-size:0.75rem; text-decoration: none;">
-                                                    <i class="feather-trash-2"></i>
+                                                <button type="button" class="btn btn-soft-danger btn-sm btn-hapus-materi"
+                                                    data-bs-toggle="modal" data-bs-target="#modalHapusMateri"
+                                                    data-id="{{ $materi->id_materi }}"
+                                                    data-judul="{{ $materi->judul_materi }}"
+                                                    style="font-size:0.75rem; padding:0.2rem 0.5rem;">
+                                                    <i class="feather-trash-2" style="font-size:0.75rem;"></i>
                                                 </button>
                                             </div>
                                         </div>
-                                        <h6 class="mb-1 text-dark" style="font-size:0.85rem;">{{ $materi->tugas->judul_tugas }}</h6>
-                                        <small class="text-muted d-block mb-1" style="font-size:0.7rem;">
-                                            <i class="feather-clock me-1"></i> Deadline: <span class="fw-semibold text-danger">{{ \Carbon\Carbon::parse($materi->tugas->tanggal_deadline)->format('d M Y, H:i') }}</span>
-                                        </small>
-                                        @if ($materi->tugas->file_name)
-                                            <a href="{{ asset('storage/' . $materi->tugas->file_path) }}" target="_blank" class="badge bg-warning text-dark text-decoration-none mt-1" style="font-size:0.65rem;">
-                                                <i class="feather-paperclip"></i> Lampiran Tugas
-                                            </a>
+                                        @if ($materi->deskripsi)
+                                            <p class="text-muted mb-2" style="font-size:0.8rem; line-height:1.4;">
+                                                {{ Str::limit($materi->deskripsi, 80) }}
+                                            </p>
                                         @endif
-                                    </div>
-                                @else
-                                    <button type="button" class="btn btn-outline-warning btn-sm w-100 mt-2 btn-tambah-tugas"
-                                        data-bs-toggle="modal" data-bs-target="#modalTambahTugas"
-                                        data-materi-id="{{ $materi->id_materi }}"
-                                        data-minggu="{{ $minggu }}"
-                                        style="font-size:0.75rem; padding:0.3rem 0.5rem; border-style: dashed;">
-                                        <i class="feather-plus-circle me-1"></i> Tambah Tugas
-                                    </button>
-                                @endif
-                                <div class="d-flex align-items-center justify-content-between mt-2">
-                                    <small class="text-muted" style="font-size:0.72rem;">
-                                        <i class="feather-calendar me-1"></i>{{ $materi->tanggal_upload }}
-                                    </small>
-                                    <div class="d-flex gap-1">
-                                        <button type="button" class="btn btn-soft-warning btn-sm btn-edit-materi"
-                                            data-bs-toggle="modal" data-bs-target="#modalEditMateri"
-                                            data-id="{{ $materi->id_materi }}"
-                                            data-judul="{{ $materi->judul_materi }}"
-                                            data-deskripsi="{{ $materi->deskripsi }}"
-                                            data-semester="{{ $materi->semester }}"
-                                            style="font-size:0.75rem; padding:0.2rem 0.5rem;">
-                                            <i class="feather-edit-2" style="font-size:0.75rem;"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-soft-danger btn-sm btn-hapus-materi"
-                                            data-bs-toggle="modal" data-bs-target="#modalHapusMateri"
-                                            data-id="{{ $materi->id_materi }}"
+                                        @if ($materi->file_name)
+                                            <div class="d-flex align-items-center gap-2 mb-2 p-2 rounded" style="background:#f5f5f5;">
+                                                <i class="feather-file text-primary" style="font-size:0.9rem;"></i>
+                                                <span style="font-size:0.78rem;" class="text-truncate">{{ $materi->file_name }}</span>
+                                                <a href="{{ asset('storage/' . $materi->file_path) }}" target="_blank"
+                                                    class="ms-auto badge bg-primary text-white text-decoration-none" style="font-size:0.7rem;">
+                                                    <i class="feather-download" style="font-size:0.65rem;"></i> Unduh
+                                                </a>
+                                            </div>
+                                        @endif
+
+                                        {{-- Tugas Section (multiple) --}}
+                                        @if ($materi->tugas->isNotEmpty())
+                                            @foreach ($materi->tugas as $tugas)
+                                                <div class="mt-2 p-2 rounded border border-warning" style="background-color: #fffdf5;">
+                                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                                        <span class="fw-bold text-warning" style="font-size:0.8rem; color: #d97706 !important;"><i class="feather-clipboard me-1"></i>Tugas</span>
+                                                        <div class="d-flex gap-2">
+                                                            <button type="button" class="btn btn-sm btn-link p-0 text-warning btn-edit-tugas"
+                                                                data-bs-toggle="modal" data-bs-target="#modalEditTugas"
+                                                                data-id="{{ $tugas->id_tugas }}"
+                                                                data-judul="{{ $tugas->judul_tugas }}"
+                                                                data-deskripsi="{{ $tugas->deskripsi }}"
+                                                                data-mulai="{{ \Carbon\Carbon::parse($tugas->tanggal_mulai)->format('Y-m-d\TH:i') }}"
+                                                                data-deadline="{{ \Carbon\Carbon::parse($tugas->tanggal_deadline)->format('Y-m-d\TH:i') }}"
+                                                                style="font-size:0.75rem; text-decoration: none;">
+                                                                <i class="feather-edit-2"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-link p-0 text-danger btn-hapus-tugas"
+                                                                data-bs-toggle="modal" data-bs-target="#modalHapusTugas"
+                                                                data-id="{{ $tugas->id_tugas }}"
+                                                                style="font-size:0.75rem; text-decoration: none;">
+                                                                <i class="feather-trash-2"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <h6 class="mb-1 text-dark" style="font-size:0.85rem;">{{ $tugas->judul_tugas }}</h6>
+                                                    <small class="text-muted d-block mb-1" style="font-size:0.7rem;">
+                                                        <i class="feather-clock me-1"></i> Deadline: <span class="fw-semibold text-danger">{{ \Carbon\Carbon::parse($tugas->tanggal_deadline)->format('d M Y, H:i') }}</span>
+                                                    </small>
+                                                    @if ($tugas->file_name)
+                                                        <a href="{{ asset('storage/' . $tugas->file_path) }}" target="_blank" class="badge bg-warning text-dark text-decoration-none mt-1" style="font-size:0.65rem;">
+                                                            <i class="feather-paperclip"></i> Lampiran Tugas
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        @endif
+
+                                        {{-- Tambah Tugas Button (per materi) --}}
+                                        <button type="button" class="btn btn-outline-warning btn-sm w-100 mt-2 btn-tambah-tugas"
+                                            data-bs-toggle="modal" data-bs-target="#modalTambahTugas"
+                                            data-materi-id="{{ $materi->id_materi }}"
                                             data-minggu="{{ $minggu }}"
-                                            style="font-size:0.75rem; padding:0.2rem 0.5rem;">
-                                            <i class="feather-trash-2" style="font-size:0.75rem;"></i>
+                                            style="font-size:0.75rem; padding:0.3rem 0.5rem; border-style: dashed;">
+                                            <i class="feather-plus-circle me-1"></i> Tambah Tugas
                                         </button>
+
+                                        <small class="text-muted d-block mt-1" style="font-size:0.72rem;">
+                                            <i class="feather-calendar me-1"></i>{{ $materi->tanggal_upload }}
+                                        </small>
                                     </div>
-                                </div>
+                                @endforeach
                             @else
-                                <div class="text-center py-3">
+                                <div class="text-center py-2">
                                     <i class="feather-plus-circle d-block mb-2 text-muted" style="font-size:1.8rem;"></i>
                                     <p class="text-muted mb-2" style="font-size:0.82rem;">Belum ada materi</p>
-                                    <button type="button" class="btn btn-primary btn-sm btn-tambah-materi"
-                                        data-bs-toggle="modal" data-bs-target="#modalTambahMateri"
-                                        data-minggu="{{ $minggu }}"
-                                        style="font-size:0.82rem; padding:0.3rem 0.8rem;">
-                                        <i class="feather-upload me-1" style="font-size:0.8rem;"></i> Upload Materi
-                                    </button>
                                 </div>
                             @endif
+
+                            {{-- Tombol Upload Materi selalu tampil --}}
+                            <button type="button" class="btn btn-primary btn-sm w-100 btn-tambah-materi {{ $hasMateri ? 'mt-1' : '' }}"
+                                data-bs-toggle="modal" data-bs-target="#modalTambahMateri"
+                                data-minggu="{{ $minggu }}"
+                                style="font-size:0.82rem; padding:0.3rem 0.8rem;">
+                                <i class="feather-upload me-1" style="font-size:0.8rem;"></i> Upload Materi
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -304,7 +362,7 @@
                         </div>
                         <h5 class="fw-bold">Hapus Materi</h5>
                         <p class="text-muted mb-0">
-                            Hapus materi <strong id="hapusMingguLabel"></strong>?
+                            Hapus materi <strong id="hapusMateriLabel"></strong>?
                             File yang diupload juga akan dihapus.
                         </p>
                     </div>
@@ -473,7 +531,7 @@
             // Hapus materi
             document.querySelectorAll('.btn-hapus-materi').forEach(function (btn) {
                 btn.addEventListener('click', function () {
-                    document.getElementById('hapusMingguLabel').textContent = 'Minggu ' + this.dataset.minggu;
+                    document.getElementById('hapusMateriLabel').textContent = '"' + this.dataset.judul + '"';
                     document.getElementById('formHapusMateri').action = '{{ url("guru/materi") }}/' + this.dataset.id;
                 });
             });

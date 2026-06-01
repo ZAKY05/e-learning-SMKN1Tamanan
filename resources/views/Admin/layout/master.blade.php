@@ -64,7 +64,11 @@
                         <h5 class="m-b-10">@yield('page_title', 'Dashboard')</h5>
                     </div>
                     <ul class="breadcrumb">
-                        @yield('breadcrumb', '<li class="breadcrumb-item">Dashboard</li>')
+                        @hasSection('breadcrumb')
+                            @yield('breadcrumb')
+                        @else
+                            <li class="breadcrumb-item">Dashboard</li>
+                        @endif
                     </ul>
                 </div>
                 <div class="page-header-right ms-auto">

@@ -21,6 +21,7 @@
                 </a>
             </div>
             <!--! [End] nxl-navigation-toggle !-->
+
             <!--! [Start] nxl-lavel-mega-menu-toggle !-->
             <div class="nxl-lavel-mega-menu-toggle d-flex d-lg-none">
                 <a href="javascript:void(0);" id="nxl-lavel-mega-menu-open">
@@ -66,98 +67,16 @@
                     </a>
                 </div>
                 
-                <div class="dropdown nxl-h-item">
-                    <a class="nxl-head-link me-3" data-bs-toggle="dropdown" href="#" role="button"
-                        data-bs-auto-close="outside">
-                        <i class="feather-bell"></i>
-                        <span class="badge bg-danger nxl-h-badge">3</span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-notifications-menu">
-                        <div class="d-flex justify-content-between align-items-center notifications-head">
-                            <h6 class="fw-bold text-dark mb-0">Notifications</h6>
-                            <a href="javascript:void(0);" class="fs-11 text-success text-end ms-auto"
-                                data-bs-toggle="tooltip" title="Make as Read">
-                                <i class="feather-check"></i>
-                                <span>Make as Read</span>
-                            </a>
-                        </div>
-                        <div class="notifications-item">
-                            <img src="assets/images/avatar/2.png" alt="" class="rounded me-3 border" />
-                            <div class="notifications-desc">
-                                <a href="javascript:void(0);" class="font-body text-truncate-2-line"> <span
-                                        class="fw-semibold text-dark">Malanie Hanvey</span> We should talk about that
-                                    at lunch!</a>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="notifications-date text-muted border-bottom border-bottom-dashed">2
-                                        minutes ago</div>
-                                    <div class="d-flex align-items-center float-end gap-2">
-                                        <a href="javascript:void(0);"
-                                            class="d-block wd-8 ht-8 rounded-circle bg-gray-300"
-                                            data-bs-toggle="tooltip" title="Make as Read"></a>
-                                        <a href="javascript:void(0);" class="text-danger" data-bs-toggle="tooltip"
-                                            title="Remove">
-                                            <i class="feather-x fs-12"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="notifications-item">
-                            <img src="assets/images/avatar/3.png" alt="" class="rounded me-3 border" />
-                            <div class="notifications-desc">
-                                <a href="javascript:void(0);" class="font-body text-truncate-2-line"> <span
-                                        class="fw-semibold text-dark">Valentine Maton</span> You can download the
-                                    latest invoices now.</a>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="notifications-date text-muted border-bottom border-bottom-dashed">36
-                                        minutes ago</div>
-                                    <div class="d-flex align-items-center float-end gap-2">
-                                        <a href="javascript:void(0);"
-                                            class="d-block wd-8 ht-8 rounded-circle bg-gray-300"
-                                            data-bs-toggle="tooltip" title="Make as Read"></a>
-                                        <a href="javascript:void(0);" class="text-danger" data-bs-toggle="tooltip"
-                                            title="Remove">
-                                            <i class="feather-x fs-12"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="notifications-item">
-                            <img src="assets/images/avatar/4.png" alt="" class="rounded me-3 border" />
-                            <div class="notifications-desc">
-                                <a href="javascript:void(0);" class="font-body text-truncate-2-line"> <span
-                                        class="fw-semibold text-dark">Archie Cantones</span> Don't forget to pickup
-                                    Jeremy after school!</a>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="notifications-date text-muted border-bottom border-bottom-dashed">53
-                                        minutes ago</div>
-                                    <div class="d-flex align-items-center float-end gap-2">
-                                        <a href="javascript:void(0);"
-                                            class="d-block wd-8 ht-8 rounded-circle bg-gray-300"
-                                            data-bs-toggle="tooltip" title="Make as Read"></a>
-                                        <a href="javascript:void(0);" class="text-danger" data-bs-toggle="tooltip"
-                                            title="Remove">
-                                            <i class="feather-x fs-12"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-center notifications-footer">
-                            <a href="javascript:void(0);" class="fs-13 fw-semibold text-dark">Alls Notifications</a>
-                        </div>
-                    </div>
-                </div>
+
                 <div class="dropdown nxl-h-item">
                     <a href="javascript:void(0);" data-bs-toggle="dropdown" role="button"
                         data-bs-auto-close="outside">
-                        <img src="assets/images/avatar/1.png" alt="user-image" class="img-fluid user-avtar me-0" />
+                        <img src="{{ auth()->user()->avatar_url }}" alt="user-image" class="img-fluid user-avtar me-0" />
                     </a>
                     <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown">
                         <div class="dropdown-header">
                             <div class="d-flex align-items-center">
-                                <img src="assets/images/avatar/1.png" alt="user-image"
+                                <img src="{{ auth()->user()->avatar_url }}" alt="user-image"
                                     class="img-fluid user-avtar" />
                                 <div>
                                     <h6 class="text-dark mb-0"> {{ auth()->user()->name }}<span
@@ -167,7 +86,7 @@
                             </div>
                         </div>
                         <div class="dropdown-divider"></div>
-                        <a href="javascript:void(0);" class="dropdown-item">
+                        <a href="{{ route('admin.profile.show') }}" class="dropdown-item">
                             <i class="feather-user"></i>
                             <span>Profile Details</span>
                         </a> 

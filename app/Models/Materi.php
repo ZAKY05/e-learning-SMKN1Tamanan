@@ -45,6 +45,6 @@ class Materi extends Model
 
     public function tugas()
     {
-        return $this->hasOne(Tugas::class, 'materi_id', 'id_materi');
+        return $this->hasMany(Tugas::class, 'materi_id', 'id_materi');
     }
 }
