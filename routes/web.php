@@ -139,6 +139,7 @@ Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     // Upload Tugas
     Route::get('/tugas', [\App\Http\Controllers\TugasController::class, 'index'])->name('tugas.index');
     Route::post('/tugas', [\App\Http\Controllers\TugasController::class, 'store'])->name('tugas.store');
+    Route::get('/tugas/{id}', [\App\Http\Controllers\TugasController::class, 'show'])->name('tugas.show');
     Route::put('/tugas/{id}', [\App\Http\Controllers\TugasController::class, 'update'])->name('tugas.update');
     Route::delete('/tugas/{id}', [\App\Http\Controllers\TugasController::class, 'destroy'])->name('tugas.destroy');
     Route::get('/tugas/{id}/pengumpulan', [\App\Http\Controllers\TugasController::class, 'pengumpulan'])->name('tugas.pengumpulan');
