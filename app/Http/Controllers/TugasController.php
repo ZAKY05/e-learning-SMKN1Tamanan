@@ -140,6 +140,18 @@ class TugasController extends Controller
             ->with('success', "Tugas berhasil dihapus!");
     }
 
+    public function show($id)
+    {
+        $guru = Auth::user()->guru;
+        $tugas = Tugas::with(['kelas', 'mapel', 'materi'])->findOrFail($id);
+
+        if ($tugas->guru_id !== $guru->id_guru) {
+            return redirect()->route('guru.tugas.index')->with('error', 'Akses ditolak.');
+        }
+
+        return view('Guru.pages.tugas-show', compact('tugas'));
+    }
+
     public function pengumpulan($id)
     {
         $guru = Auth::user()->guru;
