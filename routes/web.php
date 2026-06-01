@@ -121,13 +121,7 @@ Route::prefix('guru')->name('guru.')->middleware('auth')->group(function () {
     Route::put('/profile', [GuruProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [GuruProfileController::class, 'updatePassword'])->name('profile.password');
 
-    // Bank-lokasi guru (Sekarang ada di dalam grup 'guru.')
-    // URL akan menjadi: /guru/bank-lokasi
-    // Nama rute akan menjadi: guru.bank-lokasi-guru.index
-    Route::get('/bank-lokasi', [BankLokasiController::class, 'index_guru'])->name('bank-lokasi-guru.index');
-    Route::post('/bank-lokasi', [BankLokasiController::class, 'store'])->name('bank-lokasi-guru.store');
-    Route::put('/bank-lokasi/{id}', [BankLokasiController::class, 'update'])->name('bank-lokasi-guru.update');
-    Route::delete('/bank-lokasi/{id}', [BankLokasiController::class, 'destroy'])->name('bank-lokasi-guru.destroy');
+
 
     // Upload Materi
     Route::get('/materi', [MateriController::class, 'index'])->name('materi.index');
