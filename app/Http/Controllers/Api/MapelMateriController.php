@@ -269,8 +269,8 @@ class MapelMateriController extends Controller
         }
 
         $tugasData = null;
-        if ($materi->tugas) {
-            $t = $materi->tugas;
+        if ($materi->tugas && $materi->tugas->isNotEmpty()) {
+            $t = $materi->tugas->first();
             $tugasData = [
                 'id_tugas'          => $t->id_tugas,
                 'judul_tugas'       => $t->judul_tugas,

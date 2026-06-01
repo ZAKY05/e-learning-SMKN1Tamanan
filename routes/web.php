@@ -10,7 +10,7 @@ use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\AkunGuruController;
 use App\Http\Controllers\MapelController;
-use App\Http\Controllers\BanklokasiController;
+use App\Http\Controllers\BankLokasiController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\MateriController;
 use App\Http\Controllers\PresensiGuruController;
