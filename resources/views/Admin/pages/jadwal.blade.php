@@ -270,12 +270,7 @@
                             <strong>Peringatan:</strong> Mengimpor jadwal akan <strong>MENGHAPUS</strong> dan menggantikan semua jadwal yang sudah ada untuk semester ini!
                         </div>
                         
-                        <div class="mb-4 text-center">
-                            <p class="text-muted mb-2" style="font-size:0.9rem;">Belum punya file dengan format yang sesuai?</p>
-                            <a href="{{ route('admin.jadwal.import.template') }}" class="btn btn-outline-success btn-sm">
-                                <i class="feather-download me-1"></i> Download Template Excel
-                            </a>
-                        </div>
+
                         
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Pilih File Excel (.xlsx / .xls)</label>

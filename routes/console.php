@@ -8,5 +8,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('jadwal:reminder')->hourly();
+
+Schedule::command('jadwal:reminder')->everyMinute()->withoutOverlapping();
 Schedule::command('jadwal:notify-guru')->everyMinute();
