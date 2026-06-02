@@ -1,13 +1,13 @@
 <?php
-
+ 
 namespace App\Console\Commands;
-
+ 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Services\FcmService;
-
+ 
 /**
  * Kirim notifikasi pengingat jadwal mengajar kepada guru.
  *
@@ -25,7 +25,7 @@ class JadwalReminderCommand extends Command
 {
     protected $signature   = 'jadwal:reminder';
     protected $description = 'Kirim notifikasi pengingat jadwal mengajar untuk guru (tanpa toleransi)';
-
+ 
     private const HARI_MAP = [
         'senin'  => Carbon::MONDAY,
         'selasa' => Carbon::TUESDAY,
@@ -33,33 +33,33 @@ class JadwalReminderCommand extends Command
         'kamis'  => Carbon::THURSDAY,
         'jumat'  => Carbon::FRIDAY,
     ];
-
+ 
     // Offset menit untuk tiap jenis reminder
     private const OFFSET_1JAM    = 60;
     private const OFFSET_15MENIT = 15;
     private const OFFSET_MULAI   = 0;
-
+ 
     public function handle(): void
     {
         $now         = Carbon::now()->second(0)->microsecond(0); // bulatkan ke menit
         $tahunAjaran = $this->getTahunAjaran($now);
         $semester    = $this->getSemester($now);
         $hariIni     = $this->carbonDayToHari($now->dayOfWeek);
-
+ 
         $this->info("Tahun: $tahunAjaran | Semester: $semester | Waktu: " . $now->format('H:i'));
-
+ 
         if (!$hariIni) {
             $this->info('Hari libur, tidak ada pengingat.');
             return;
         }
-
+ 
         $waktuMulai = $this->getWaktuMulai($tahunAjaran, $semester);
         $durasi     = $this->getDurasiJam($tahunAjaran, $semester);
         $nowHHmm    = $now->format('H:i');
-
+ 
         // Bangun daftar: jam_ke => waktu_mulai (string 'H:i')
         $jadwalWaktu = $this->buildJadwalWaktu($waktuMulai, $durasi);
-
+ 
         foreach ($jadwalWaktu as $jamKe => $mulaiStr) {
             // --- Reminder tepat waktunya mengajar ---
             if ($mulaiStr === $nowHHmm) {
@@ -69,7 +69,7 @@ class JadwalReminderCommand extends Command
                     fn($j) => "Saatnya mengajar {$j->nama_mapel} di kelas {$j->nama_kelas} sekarang!"
                 );
             }
-
+ 
             // --- Reminder 15 menit sebelum ---
             $mulai15 = Carbon::createFromFormat('H:i', $mulaiStr)
                 ->subMinutes(self::OFFSET_15MENIT)
@@ -81,7 +81,7 @@ class JadwalReminderCommand extends Command
                     fn($j) => "Segera siapkan diri! 15 menit lagi mengajar {$j->nama_mapel} di kelas {$j->nama_kelas}"
                 );
             }
-
+ 
             // --- Reminder 1 jam sebelum ---
             $mulai1j = Carbon::createFromFormat('H:i', $mulaiStr)
                 ->subMinutes(self::OFFSET_1JAM)
@@ -94,12 +94,12 @@ class JadwalReminderCommand extends Command
                 );
             }
         }
-
+ 
         $this->info('Selesai.');
     }
-
+ 
     // ── Core processor ────────────────────────────────────────────────────────
-
+ 
     private function prosesReminder(
         string   $tipe,
         int      $jamKe,
@@ -111,11 +111,11 @@ class JadwalReminderCommand extends Command
         callable $pesanFn
     ): void {
         $jadwalList = $this->getJadwalHariJam($hariIni, $jamKe, $tahunAjaran, $semester);
-
+ 
         $count = 0;
         foreach ($jadwalList as $j) {
             if (!$j->guru_user_id) continue;
-
+ 
             // Idempotency key: 1 notif per guru per jenis per jam ke per hari
             $cacheKey = "reminder:{$tipe}:{$j->guru_user_id}:{$hariIni}:{$jamKe}:" . $now->format('Ymd');
             if (Cache::has($cacheKey)) {
@@ -124,7 +124,7 @@ class JadwalReminderCommand extends Command
             }
             // TTL 5 menit cukup — cron jalan tiap menit, kita hanya perlu block 1 menit
             Cache::put($cacheKey, true, now()->addMinutes(5));
-
+ 
             FcmService::kirimKeUser(
                 (int) $j->guru_user_id,
                 'jadwal',
@@ -139,14 +139,14 @@ class JadwalReminderCommand extends Command
             );
             $count++;
         }
-
+ 
         if ($count > 0) {
             $this->info("Reminder [{$tipe}] jam ke-{$jamKe}: {$count} guru dikirim.");
         }
     }
-
+ 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
+ 
     /**
      * Bangun map [jam_ke => 'H:i'] berdasarkan waktu_mulai dan durasi.
      * Berhenti saat waktu_mulai jam ke-N sudah melewati jam 18:00.
@@ -157,16 +157,16 @@ class JadwalReminderCommand extends Command
     {
         $result  = [];
         $batasFin = Carbon::createFromTimeString('18:00');
-
+ 
         for ($n = 1; $n <= 16; $n++) {
             $mulaiJamN = $waktuMulai->copy()->addMinutes(($n - 1) * $durasi);
             if ($mulaiJamN->greaterThan($batasFin)) break;
             $result[$n] = $mulaiJamN->format('H:i');
         }
-
+ 
         return $result;
     }
-
+ 
     private function getJadwalHariJam(string $hari, int $jamKe, string $tahunAjaran, string $semester)
     {
         return DB::table('jadwal_pelajaran as jp')
@@ -194,18 +194,18 @@ class JadwalReminderCommand extends Command
                 $i->nama_kelas = "{$i->tingkat} {$i->nama_jurusan} {$i->golongan}"
             ));
     }
-
+ 
     private function getWaktuMulai(string $tahunAjaran, string $semester): Carbon
     {
         $setting = DB::table('setting_jadwal')
             ->where('tahun_ajaran', $tahunAjaran)
             ->where('semester', $semester)
             ->value('waktu_mulai');
-
+ 
         if (!$setting) {
             return Carbon::createFromTimeString('07:00');
         }
-
+ 
         try {
             return Carbon::createFromTimeString((string) $setting);
         } catch (\Throwable) {
@@ -213,7 +213,7 @@ class JadwalReminderCommand extends Command
             return Carbon::createFromTimeString('07:00');
         }
     }
-
+ 
     private function getDurasiJam(string $tahunAjaran, string $semester): int
     {
         return (int) (DB::table('setting_jadwal')
@@ -221,21 +221,21 @@ class JadwalReminderCommand extends Command
             ->where('semester', $semester)
             ->value('durasi_jam_menit') ?? 40);
     }
-
+ 
     private function carbonDayToHari(int $dayOfWeek): ?string
     {
         $hari = array_search($dayOfWeek, self::HARI_MAP, true);
         return $hari === false ? null : $hari;
     }
+private function getTahunAjaran(Carbon $now): string
+{
+    $year = $now->month >= 1 ? $now->year : $now->year - 1;
+    return $year . '/' . ($year + 1);
+}
 
-    private function getTahunAjaran(Carbon $now): string
-    {
-        $year = $now->month >= 7 ? $now->year : $now->year - 1;
-        return $year . '/' . ($year + 1);
-    }
+private function getSemester(Carbon $now): string
+{
+    return $now->month <= 6 ? 'ganjil' : 'genap';
+}
 
-    private function getSemester(Carbon $now): string
-    {
-        return $now->month >= 7 ? 'ganjil' : 'genap';
-    }
 }
