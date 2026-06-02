@@ -224,22 +224,37 @@ class SiswaKuisController extends Controller
             $q->select('id_pilihan', 'soal_id', 'pilihan', 'isi_pilihan', 'gambar_pilihan');
         }])->where('kuis_id', $id);
 
-        $soal = $kuis->acak_soal
+        $rawSoal = $kuis->acak_soal
             ? $soalQuery->inRandomOrder()->get()
             : $soalQuery->orderBy('nomor_urut', 'asc')->get();
 
-        // Tambahkan full URL untuk gambar soal & pilihan
-        $soal->transform(function ($s) {
-            if ($s->gambar) {
-                $s->gambar_url = asset('storage/' . $s->gambar);
-            }
-            $s->pilihanJawaban->transform(function ($p) {
-                if ($p->gambar_pilihan) {
-                    $p->gambar_url = asset('storage/' . $p->gambar_pilihan);
-                }
-                return $p;
+        // Bangun array eksplisit agar gambar_url PASTI muncul di JSON
+        $soal = $rawSoal->map(function ($s) {
+            $pilihanData = $s->pilihanJawaban->map(function ($p) {
+                return [
+                    'id_pilihan'     => $p->id_pilihan,
+                    'soal_id'        => $p->soal_id,
+                    'pilihan'        => $p->pilihan,
+                    'isi_pilihan'    => $p->isi_pilihan,
+                    'gambar_pilihan' => $p->gambar_pilihan,
+                    'gambar_url'     => $p->gambar_pilihan
+                        ? asset('storage/' . $p->gambar_pilihan)
+                        : null,
+                ];
             });
-            return $s;
+
+            return [
+                'id_soal'         => $s->id_soal,
+                'kuis_id'         => $s->kuis_id,
+                'nomor_urut'      => $s->nomor_urut,
+                'pertanyaan'      => $s->pertanyaan,
+                'tipe_soal'       => $s->tipe_soal,
+                'gambar'          => $s->gambar,
+                'gambar_url'      => $s->gambar
+                    ? asset('storage/' . $s->gambar)
+                    : null,
+                'pilihan_jawaban' => $pilihanData,
+            ];
         });
 
         // Jawaban tersimpan untuk fitur resume
