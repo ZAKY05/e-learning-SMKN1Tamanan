@@ -48,11 +48,7 @@ class JadwalController extends Controller
                 'jam_jumat'           => 8,
                 'waktu_mulai'         => '07:00',
                 'durasi_jam_menit'    => 45,
-                'slot_khusus'         => [
-                    ['sebelum_jam' => 1, 'durasi' => 30, 'label' => 'Upacara', 'hari' => 'senin'],
-                    ['setelah_jam' => 4, 'durasi' => 15, 'label' => 'Istirahat', 'hari' => null],
-                    ['setelah_jam' => 7, 'durasi' => 45, 'label' => 'Istirahat / Sholat Dhuhur', 'hari' => null],
-                ],
+                'slot_khusus'         => [],
             ]);
         }
 
@@ -135,24 +131,12 @@ class JadwalController extends Controller
                 'jam_jumat'           => 8,
                 'waktu_mulai'         => '07:00',
                 'durasi_jam_menit'    => 45,
-                'slot_khusus'         => [
-                    ['sebelum_jam' => 1, 'durasi' => 30, 'label' => 'Upacara', 'hari' => 'senin'],
-                    ['setelah_jam' => 4, 'durasi' => 15, 'label' => 'Istirahat', 'hari' => null],
-                    ['setelah_jam' => 7, 'durasi' => 45, 'label' => 'Istirahat / Sholat Dhuhur', 'hari' => null],
-                ],
+                'slot_khusus'         => [],
             ]);
         }
 
-        $guruList = Guru::orderBy('nama')->get();
-
-        // Load existing kode guru
-        $guruKodes = GuruKode::where('tahun_ajaran', $tahunAjaran)
-            ->where('semester', $semester)
-            ->pluck('kode', 'guru_id')
-            ->toArray();
-
         return view('Admin.pages.jadwal-setting', compact(
-            'setting', 'tahunAjaran', 'semester', 'guruList', 'guruKodes'
+            'setting', 'tahunAjaran', 'semester'
         ));
     }
 
@@ -164,68 +148,26 @@ class JadwalController extends Controller
         $request->validate([
             'tahun_ajaran'         => 'required|string|max:9',
             'semester'             => 'required|in:ganjil,genap',
-            'total_jam_per_minggu' => 'required|integer|min:1|max:60',
-            'jam_mulok_tambahan'   => 'required|integer|min:0|max:10',
-            'jam_senin'            => 'required|integer|min:0|max:14',
-            'jam_selasa'           => 'required|integer|min:0|max:14',
-            'jam_rabu'             => 'required|integer|min:0|max:14',
-            'jam_kamis'            => 'required|integer|min:0|max:14',
-            'jam_jumat'            => 'required|integer|min:0|max:14',
             'waktu_mulai'          => 'required|string',
             'durasi_jam_menit'     => 'required|integer|min:30|max:60',
         ]);
 
-        DB::transaction(function () use ($request) {
-            // Clean waktu_mulai to H:i
-            $waktuMulai = \Carbon\Carbon::parse($request->waktu_mulai)->format('H:i');
+        // Clean waktu_mulai to H:i
+        $waktuMulai = \Carbon\Carbon::parse($request->waktu_mulai)->format('H:i');
 
-            // Save/update setting
-            $setting = SettingJadwal::updateOrCreate(
-                [
-                    'tahun_ajaran' => $request->tahun_ajaran,
-                    'semester'     => $request->semester,
-                ],
-                [
-                    'total_jam_per_minggu' => $request->total_jam_per_minggu,
-                    'jam_mulok_tambahan'   => $request->jam_mulok_tambahan,
-                    'jam_senin'            => $request->jam_senin,
-                    'jam_selasa'           => $request->jam_selasa,
-                    'jam_rabu'             => $request->jam_rabu,
-                    'jam_kamis'            => $request->jam_kamis,
-                    'jam_jumat'            => $request->jam_jumat,
-                    'waktu_mulai'          => $waktuMulai,
-                    'durasi_jam_menit'     => $request->durasi_jam_menit,
-                    'slot_khusus'          => json_decode($request->input('slot_khusus_json', '[]'), true),
-                ]
-            );
-
-            // Save kode guru
-            $kodeGuru = $request->input('kode_guru', []);
-            $maxJam   = $request->input('max_jam_guru', []);
-
-            // Delete existing kode guru for this semester
-            GuruKode::where('tahun_ajaran', $request->tahun_ajaran)
-                ->where('semester', $request->semester)
-                ->delete();
-
-            foreach ($kodeGuru as $guruId => $kode) {
-                if (!empty(trim($kode))) {
-                    GuruKode::create([
-                        'guru_id'      => $guruId,
-                        'kode'         => strtoupper(trim($kode)),
-                        'tahun_ajaran' => $request->tahun_ajaran,
-                        'semester'     => $request->semester,
-                    ]);
-                }
-            }
-
-            // Update max jam guru
-            foreach ($maxJam as $guruId => $max) {
-                Guru::where('id_guru', $guruId)->update([
-                    'max_jam_per_minggu' => (int) $max ?: 24,
-                ]);
-            }
-        });
+        SettingJadwal::updateOrCreate(
+            [
+                'tahun_ajaran' => $request->tahun_ajaran,
+                'semester'     => $request->semester,
+            ],
+            [
+                'total_jam_per_minggu' => 48,
+                'jam_mulok_tambahan'   => 2,
+                'waktu_mulai'          => $waktuMulai,
+                'durasi_jam_menit'     => $request->durasi_jam_menit,
+                'slot_khusus'          => [],
+            ]
+        );
 
         return redirect()
             ->route('admin.jadwal.setting', [
@@ -235,343 +177,6 @@ class JadwalController extends Controller
             ->with('success', 'Pengaturan jadwal berhasil disimpan!');
     }
 
-    /**
-     * Generate jadwal otomatis
-     */
-    public function generate(Request $request)
-    {
-        $request->validate([
-            'tahun_ajaran' => 'required|string|max:9',
-            'semester'     => 'required|in:ganjil,genap',
-        ]);
-
-        $tahunAjaran = $request->tahun_ajaran;
-        $semester    = $request->semester;
-
-        // Load setting
-        $setting = SettingJadwal::where('tahun_ajaran', $tahunAjaran)
-            ->where('semester', $semester)
-            ->first();
-
-        if (!$setting) {
-            return redirect()->route('admin.jadwal.setting', [
-                'tahun_ajaran' => $tahunAjaran,
-                'semester'     => $semester,
-            ])->with('error', 'Silakan atur pengaturan jadwal terlebih dahulu!');
-        }
-
-        // Hapus jadwal lama
-        JadwalPelajaran::where('tahun_ajaran', $tahunAjaran)
-            ->where('semester', $semester)
-            ->delete();
-
-        $hariList   = ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
-        $jamPerHari = $setting->getJamPerHari();
-
-        // Kelas yang tidak PKL
-        $kelasList = Kelas::with('jurusan')->where('is_pkl', false)->get();
-
-        // Track occupancy
-        $guruOccupied  = []; // [guru_id][hari][jam_ke] = true
-        $kelasOccupied = []; // [kelas_id][hari][jam_ke] = true
-        $guruTotalJam  = []; // [guru_id] = total jam minggu ini
-        
-        // Optimasi: Preload max jam guru
-        $guruMaxJam = Guru::pluck('max_jam_per_minggu', 'id_guru')->toArray();
-
-        $jadwalBaru = [];
-        $warnings   = [];
-
-        // 1. Siapkan kebutuhan mapel tiap kelas
-        $kelasMapelNeeds = [];
-        foreach ($kelasList as $kelas) {
-            $mapels = Mapel::where(function ($q) use ($kelas) {
-                $q->where('jenis', 'umum')
-                  ->orWhere(function ($q2) use ($kelas) {
-                      $q2->where('jenis', 'jurusan')
-                         ->where('jurusan_id', $kelas->jurusan_id);
-                  });
-            })->get();
-            
-            $needs = [];
-            foreach ($mapels as $mapel) {
-                $guruIds = DB::table('guru_mapel')
-                    ->where('mapel_id', $mapel->id_mapel)
-                    ->pluck('guru_id')
-                    ->toArray();
-                    
-                if (empty($guruIds) && !$mapel->isProduktif()) {
-                    $warnings[] = "Tidak ada guru untuk mapel '{$mapel->nama_mapel}' di kelas {$kelas->nama_kelas}";
-                    continue;
-                }
-                
-                $needs[] = [
-                    'mapel'    => $mapel,
-                    'guru_ids' => $guruIds,
-                    'sisa_jam' => $mapel->jam_per_minggu ?? 2,
-                ];
-            }
-            $kelasMapelNeeds[$kelas->id_kelas] = $needs;
-        }
-
-        // MATRIX MEMORI UNTUK SWAP & RELOCATE
-        $matrix = []; // $matrix[$hari][$jamKe][$kId] = ['mapel_id', 'guru_id', 'terpilihIdx']
-
-        // Helper Closures
-        $assignSlot = function($hari, $jamKe, $kId, $mapel, $guruId, $idx) use (&$matrix, &$guruOccupied, &$kelasOccupied, &$guruTotalJam) {
-            $matrix[$hari][$jamKe][$kId] = [
-                'mapel' => $mapel,
-                'guru_id' => $guruId,
-                'idx' => $idx
-            ];
-            $kelasOccupied[$kId][$hari][$jamKe] = true;
-            if ($guruId !== 'null' && $guruId !== null) {
-                $guruOccupied[$guruId][$hari][$jamKe] = $kId; // store which class the guru is teaching
-                $guruTotalJam[$guruId] = ($guruTotalJam[$guruId] ?? 0) + 1;
-            }
-        };
-
-        $unassignSlot = function($hari, $jamKe, $kId) use (&$matrix, &$guruOccupied, &$kelasOccupied, &$guruTotalJam) {
-            if (!isset($matrix[$hari][$jamKe][$kId])) return null;
-            $slot = $matrix[$hari][$jamKe][$kId];
-            unset($matrix[$hari][$jamKe][$kId]);
-            unset($kelasOccupied[$kId][$hari][$jamKe]);
-            if ($slot['guru_id'] !== 'null' && $slot['guru_id'] !== null) {
-                unset($guruOccupied[$slot['guru_id']][$hari][$jamKe]);
-                $guruTotalJam[$slot['guru_id']]--;
-            }
-            return $slot;
-        };
-
-        // FASE 1: GREEDY ASSIGNMENT
-        $lastMapelIdx = []; 
-        $unresolvedConflicts = []; // Array of needs that couldn't be scheduled
-        
-        foreach ($hariList as $hari) {
-            $maxJamHari = $jamPerHari[$hari] ?? 0;
-            for ($jamKe = 1; $jamKe <= $maxJamHari; $jamKe++) {
-                foreach ($kelasList as $kelas) {
-                    $kId = $kelas->id_kelas;
-                    $needs = &$kelasMapelNeeds[$kId];
-                    if (empty($needs)) continue;
-                    
-                    $assigned = false;
-                    $terpilihIdx = null;
-                    $guruTersedia = null;
-
-                    if (isset($lastMapelIdx[$kId]) && isset($needs[$lastMapelIdx[$kId]])) {
-                        $idx = $lastMapelIdx[$kId];
-                        if ($needs[$idx]['sisa_jam'] > 0) {
-                            $mapel = $needs[$idx]['mapel'];
-                            $guruIds = $needs[$idx]['guru_ids'];
-                            
-                            if ($mapel->isProduktif() && empty($guruIds)) {
-                                $guruTersedia = 'null'; $terpilihIdx = $idx;
-                            } else {
-                                foreach ($guruIds as $gId) {
-                                    if (isset($guruOccupied[$gId][$hari][$jamKe])) continue;
-                                    $maxJam = $guruMaxJam[$gId] ?? 24;
-                                    if (($guruTotalJam[$gId] ?? 0) >= $maxJam) continue;
-                                    $guruTersedia = $gId; $terpilihIdx = $idx; break;
-                                }
-                            }
-                        }
-                    }
-
-                    if ($guruTersedia === null) {
-                        foreach ($needs as $idx => $need) {
-                            if ($need['sisa_jam'] <= 0) continue;
-                            $mapel = $need['mapel'];
-                            $guruIds = $need['guru_ids'];
-                            
-                            if ($mapel->isProduktif() && empty($guruIds)) {
-                                $guruTersedia = 'null'; $terpilihIdx = $idx; break;
-                            } else {
-                                foreach ($guruIds as $gId) {
-                                    if (isset($guruOccupied[$gId][$hari][$jamKe])) continue;
-                                    $maxJam = $guruMaxJam[$gId] ?? 24;
-                                    if (($guruTotalJam[$gId] ?? 0) >= $maxJam) continue;
-                                    $guruTersedia = $gId; $terpilihIdx = $idx; break;
-                                }
-                            }
-                            if ($guruTersedia !== null) break;
-                        }
-                    }
-
-                    if ($guruTersedia !== null) {
-                        $assignSlot($hari, $jamKe, $kId, $needs[$terpilihIdx]['mapel'], $guruTersedia, $terpilihIdx);
-                        $needs[$terpilihIdx]['sisa_jam']--;
-                        $lastMapelIdx[$kId] = $terpilihIdx;
-                        if ($needs[$terpilihIdx]['sisa_jam'] <= 0) {
-                            unset($needs[$terpilihIdx]); unset($lastMapelIdx[$kId]);
-                        }
-                        $assigned = true;
-                    } else {
-                        // Conflict occurred! Log for Phase 2
-                        unset($lastMapelIdx[$kId]);
-                    }
-                }
-            }
-        }
-
-        // Collect remaining needs for Phase 2
-        foreach ($kelasMapelNeeds as $kId => $needs) {
-            foreach ($needs as $idx => $need) {
-                while ($need['sisa_jam'] > 0) {
-                    $unresolvedConflicts[] = [
-                        'kId' => $kId,
-                        'mapel' => $need['mapel'],
-                        'guru_ids' => $need['guru_ids'],
-                        'idx' => $idx
-                    ];
-                    $need['sisa_jam']--;
-                }
-            }
-        }
-
-        // FASE 2: REPAIR HEURISTIC (SWAP & RELOCATE)
-        $resolveConflict = function($kId, $mapel, $guruIds, $idx) use (&$matrix, &$guruOccupied, &$kelasOccupied, &$assignSlot, &$unassignSlot, $hariList, $jamPerHari, $guruMaxJam, &$guruTotalJam) {
-            // Find a slot where class K is empty
-            foreach ($hariList as $hari) {
-                $maxJamHari = $jamPerHari[$hari] ?? 0;
-                for ($jamKe = 1; $jamKe <= $maxJamHari; $jamKe++) {
-                    if (isset($kelasOccupied[$kId][$hari][$jamKe])) continue; // K must be empty
-
-                    // Try to place it here. We need one of the $guruIds to be available.
-                    foreach ($guruIds as $gId) {
-                        // Is $gId free?
-                        if (!isset($guruOccupied[$gId][$hari][$jamKe])) {
-                            // If free, why wasn't it assigned in phase 1? Maybe maxJam exceeded.
-                            $maxJam = $guruMaxJam[$gId] ?? 24;
-                            if (($guruTotalJam[$gId] ?? 0) < $maxJam) {
-                                $assignSlot($hari, $jamKe, $kId, $mapel, $gId, $idx);
-                                return true;
-                            }
-                        } else {
-                            // $gId is BUSY. They are teaching $kClash.
-                            $kClash = $guruOccupied[$gId][$hari][$jamKe];
-                            
-                            // === ATTEMPT RELOCATE ===
-                            // Can we move ($kClash, mapelClash, $gId) to a different empty slot for $kClash?
-                            foreach ($hariList as $rHari) {
-                                $rMaxJam = $jamPerHari[$rHari] ?? 0;
-                                for ($rJam = 1; $rJam <= $rMaxJam; $rJam++) {
-                                    if ($rHari === $hari && $rJam === $jamKe) continue;
-                                    
-                                    if (!isset($kelasOccupied[$kClash][$rHari][$rJam]) && !isset($guruOccupied[$gId][$rHari][$rJam])) {
-                                        // Relocate success!
-                                        $clashSlot = $unassignSlot($hari, $jamKe, $kClash);
-                                        $assignSlot($rHari, $rJam, $kClash, $clashSlot['mapel'], $clashSlot['guru_id'], $clashSlot['idx']);
-                                        
-                                        // Now slot ($hari, $jamKe) is free for $gId and $kId!
-                                        $assignSlot($hari, $jamKe, $kId, $mapel, $gId, $idx);
-                                        return true;
-                                    }
-                                }
-                            }
-
-                            // === ATTEMPT SWAP ===
-                            // We need to swap $kClash's ($hari, $jamKe, $gId) with $kClash's ($sHari, $sJam, $gOther)
-                            foreach ($hariList as $sHari) {
-                                $sMaxJam = $jamPerHari[$sHari] ?? 0;
-                                for ($sJam = 1; $sJam <= $sMaxJam; $sJam++) {
-                                    if ($sHari === $hari && $sJam === $jamKe) continue;
-                                    
-                                    if (isset($matrix[$sHari][$sJam][$kClash])) {
-                                        $otherSlot = $matrix[$sHari][$sJam][$kClash];
-                                        $gOther = $otherSlot['guru_id'];
-                                        
-                                        if ($gOther === 'null' || $gOther === null) continue;
-
-                                        // To swap, $gId must be free at ($sHari, $sJam) and $gOther must be free at ($hari, $jamKe)
-                                        if (!isset($guruOccupied[$gId][$sHari][$sJam]) && !isset($guruOccupied[$gOther][$hari][$jamKe])) {
-                                            // Swap success!
-                                            $clashSlot = $unassignSlot($hari, $jamKe, $kClash);
-                                            $otherSlotUn = $unassignSlot($sHari, $sJam, $kClash);
-                                            
-                                            $assignSlot($sHari, $sJam, $kClash, $clashSlot['mapel'], $clashSlot['guru_id'], $clashSlot['idx']);
-                                            $assignSlot($hari, $jamKe, $kClash, $otherSlotUn['mapel'], $otherSlotUn['guru_id'], $otherSlotUn['idx']);
-                                            
-                                            // Now slot ($hari, $jamKe) is free for $gId and $kId!
-                                            $assignSlot($hari, $jamKe, $kId, $mapel, $gId, $idx);
-                                            return true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
-        };
-
-        // Run Phase 2
-        foreach ($unresolvedConflicts as $conflict) {
-            $success = false;
-            // Limit attempts if needed, but here it's O(Slots * Slots), which is ~50*50 = 2500 iterations per conflict. Very fast.
-            if ($conflict['mapel']->isProduktif() && empty($conflict['guru_ids'])) {
-                // Just find any empty slot for K
-                foreach ($hariList as $hari) {
-                    $maxJamHari = $jamPerHari[$hari] ?? 0;
-                    for ($jamKe = 1; $jamKe <= $maxJamHari; $jamKe++) {
-                        if (!isset($kelasOccupied[$conflict['kId']][$hari][$jamKe])) {
-                            $assignSlot($hari, $jamKe, $conflict['kId'], $conflict['mapel'], 'null', $conflict['idx']);
-                            $success = true;
-                            break 2;
-                        }
-                    }
-                }
-            } else {
-                $success = $resolveConflict($conflict['kId'], $conflict['mapel'], $conflict['guru_ids'], $conflict['idx']);
-            }
-
-            if (!$success) {
-                $kelas = $kelasList->firstWhere('id_kelas', $conflict['kId']);
-                $warnings[] = "Mapel '{$conflict['mapel']->nama_mapel}' di kelas {$kelas->nama_kelas} kurang 1 JP (Bentrok permanen/Guru habis jam).";
-            }
-        }
-
-        // FASE 3: CONVERT MATRIX TO DB INSERT FORMAT
-        foreach ($matrix as $hari => $jams) {
-            foreach ($jams as $jamKe => $kelasSlots) {
-                foreach ($kelasSlots as $kId => $slot) {
-                    $realGuruId = $slot['guru_id'] === 'null' ? null : $slot['guru_id'];
-                    $jadwalBaru[] = [
-                        'guru_id'      => $realGuruId,
-                        'mapel_id'     => $slot['mapel']->id_mapel,
-                        'kelas_id'     => $kId,
-                        'hari'         => $hari,
-                        'jam_ke'       => $jamKe,
-                        'tahun_ajaran' => $tahunAjaran,
-                        'semester'     => $semester,
-                        'created_at'   => now(),
-                        'updated_at'   => now(),
-                    ];
-                }
-            }
-        }
-
-        // Insert semua jadwal
-        if (!empty($jadwalBaru)) {
-            foreach (array_chunk($jadwalBaru, 100) as $chunk) {
-                JadwalPelajaran::insert($chunk);
-            }
-        }
-
-        $msg = 'Jadwal berhasil di-generate! Total: ' . count($jadwalBaru) . ' slot.';
-        if (!empty($warnings)) {
-            $msg .= ' (Ada ' . count($warnings) . ' peringatan)';
-        }
-
-        return redirect()
-            ->route('admin.jadwal.index', [
-                'tahun_ajaran' => $tahunAjaran,
-                'semester'     => $semester,
-            ])
-            ->with('success', $msg)
-            ->with('warnings', $warnings);
-    }
 
     /**
      * Simpan / update satu slot jadwal secara manual

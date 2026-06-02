@@ -39,17 +39,27 @@ class SettingJadwal extends Model
     }
 
     /**
-     * Distribusi jam per hari sebagai array
+     * Distribusi jam per hari sebagai array (dihitung dinamis dari data jadwal yang ada)
      */
     public function getJamPerHari(): array
     {
-        return [
-            'senin'  => $this->jam_senin,
-            'selasa' => $this->jam_selasa,
-            'rabu'   => $this->jam_rabu,
-            'kamis'  => $this->jam_kamis,
-            'jumat'  => $this->jam_jumat,
-        ];
+        $days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat'];
+        $result = [];
+
+        // Ambil max jam_ke per hari untuk tahun ajaran dan semester ini
+        $maxJams = \App\Models\JadwalPelajaran::where('tahun_ajaran', $this->tahun_ajaran)
+            ->where('semester', $this->semester)
+            ->select('hari', \DB::raw('MAX(jam_ke) as max_jam'))
+            ->groupBy('hari')
+            ->pluck('max_jam', 'hari')
+            ->toArray();
+
+        foreach ($days as $day) {
+            $fallback = $this->{'jam_' . $day} ?? 10;
+            $result[$day] = isset($maxJams[$day]) ? max($maxJams[$day], 1) : $fallback;
+        }
+
+        return $result;
     }
 
     /**
@@ -57,7 +67,7 @@ class SettingJadwal extends Model
      */
     public function getTotalDistribusiAttribute(): int
     {
-        return $this->jam_senin + $this->jam_selasa + $this->jam_rabu + $this->jam_kamis + $this->jam_jumat;
+        return array_sum($this->getJamPerHari());
     }
 
     /**
@@ -65,7 +75,7 @@ class SettingJadwal extends Model
      */
     public function getMaxJamPerHariAttribute(): int
     {
-        return max($this->jam_senin, $this->jam_selasa, $this->jam_rabu, $this->jam_kamis, $this->jam_jumat);
+        return max($this->getJamPerHari());
     }
 
     /**
