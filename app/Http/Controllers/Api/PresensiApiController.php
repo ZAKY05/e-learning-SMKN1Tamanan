@@ -103,10 +103,10 @@ class PresensiApiController extends Controller
     public function scanQr(Request $request)
     {
         $request->validate([
-            'qr_code'   => 'required|string',
-            'latitude'  => 'nullable|string',
-            'longitude' => 'nullable|string',
-        ]);
+    'qr_code'   => 'required|string',
+    'latitude'  => 'required|numeric|between:-90,90',
+    'longitude' => 'required|numeric|between:-180,180',
+]);
 
         $user  = $request->user();
         $siswa = $user->siswa;
@@ -180,27 +180,33 @@ class PresensiApiController extends Controller
         $statusKehadiran = $now->lte($jamSelesai) ? 'hadir' : 'terlambat';
 
         // Hitung jarak
-        $jarakMeter = null;
-        if ($request->latitude && $request->longitude && $presensi->lokasi) {
-            $jarakMeter = $this->hitungJarak(
-                $request->latitude,
-                $request->longitude,
-                $presensi->lokasi->latitude,
-                $presensi->lokasi->longitude
-            );
+       $jarakMeter = null;
 
-            if ($presensi->lokasi->radius && $jarakMeter > $presensi->lokasi->radius) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda berada di luar jangkauan lokasi presensi. Jarak Anda: '
-                        . round($jarakMeter) . ' meter (maksimal: ' . $presensi->lokasi->radius . ' meter)',
-                    'data' => [
-                        'jarak_meter'     => round($jarakMeter, 2),
-                        'radius_maksimal' => $presensi->lokasi->radius,
-                    ],
-                ], 422);
-            }
-        }
+if (!$presensi->lokasi || !$presensi->lokasi->latitude || !$presensi->lokasi->radius) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Konfigurasi lokasi presensi tidak valid. Hubungi guru.',
+    ], 422);
+}
+
+$jarakMeter = $this->hitungJarak(
+    $request->latitude,
+    $request->longitude,
+    $presensi->lokasi->latitude,
+    $presensi->lokasi->longitude
+);
+
+if ($jarakMeter > $presensi->lokasi->radius) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Anda berada di luar jangkauan lokasi presensi. Jarak Anda: '
+            . round($jarakMeter) . ' meter (maksimal: ' . $presensi->lokasi->radius . ' meter)',
+        'data' => [
+            'jarak_meter'     => round($jarakMeter, 2),
+            'radius_maksimal' => $presensi->lokasi->radius,
+        ],
+    ], 422);
+}
 
         // Simpan
         $detail = DetailPresensi::create([

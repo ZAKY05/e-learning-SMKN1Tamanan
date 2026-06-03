@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tugas;
 use App\Models\PengumpulanTugas;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class SiswaTugasController extends Controller
@@ -109,7 +110,7 @@ class SiswaTugasController extends Controller
                 'count' => $tugasList->count()
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error in SiswaTugasController@index: ' . $e->getMessage(), [
+            Log::error('Error in SiswaTugasController@index: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'siswa_id' => $siswa->id_siswa ?? null,
                 'kelas_id' => $siswa->kelas_id ?? null,
@@ -236,7 +237,7 @@ class SiswaTugasController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            \Log::error('Error in SiswaTugasController@upload: ' . $e->getMessage(), [
+            Log::error('Error in SiswaTugasController@upload: ' . $e->getMessage(), [
                 'user_id' => $user->id ?? null,
                 'tugas_id' => $tugasId,
                 'trace' => $e->getTraceAsString()
